@@ -1,25 +1,38 @@
-import { makeStyles } from '@material-ui/core';
+import Box from '@mui/material/Box';
 
-const useStyles = makeStyles(theme => ({
-  tile: {
-    margin: 0,
-    padding: 0,
-    width: '20px',
-    height: '20px',
-    color: 'red',
-    border: '1px solid black',
-  }
-}));
+const tileStyles = {
+  margin: 0,
+  padding: 0,
+  width: '20px',
+  height: '20px',
+  backgroundColor: 'red',
+  border: '1px solid black',
+};
 
-const classes = useStyles();
+const mapStyles = {
+  margin: 10,
+  padding: 10,
+  width: 'full',
+  height: '800px',
+  color: 'red',
+  border: '1px solid black',
+  display: 'flex',
+  justifyContent: 'center',
+};
 
 const Map = () => {
   return (
     <div>
       <h1>Map</h1>
-      <div id="map">
-        <div className={classes.tile} />
-      </div>
+      <Box sx={mapStyles}>
+        <Box sx={tileStyles} />
+        <Box sx={tileStyles} />
+        <Box sx={tileStyles} />
+        <Box sx={tileStyles} />
+        <Box sx={tileStyles} />
+        <Box sx={tileStyles} />
+        <Box sx={tileStyles} />
+      </Box>
     </div>
   );
 }
