@@ -1,25 +1,28 @@
 import React from 'react';
+import Box from '@mui/material/Box';
 import Map from './Map';
 import './App.css';
+import StructureMenu from './StructureMenu';
+
+const styles = {
+  padding: 10,
+  width: 'full',
+  height: '800px',
+  display: 'flex',
+  justifyContent: 'flex-start',
+};
 
 function App() {
   return (
     <div className="App">
-      {/* <header className="App-header">
-        <p>
-          Edit <code>src/App.tsx</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header> */}
       <body>
-          <Map/>
+        <div>
+          <h1>Map</h1>
+          <Box sx={styles}>
+            <Map/>
+            <StructureMenu/>
+          </Box>
+        </div>
       </body>
     </div>
   );
