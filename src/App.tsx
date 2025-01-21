@@ -15,7 +15,6 @@ const styles = {
 function App() {
   return (
     <div className="App">
-      <body>
         <div>
           <h1>Map</h1>
           <Box sx={styles}>
@@ -23,7 +22,6 @@ function App() {
             <StructureMenu/>
           </Box>
         </div>
-      </body>
     </div>
   );
 }

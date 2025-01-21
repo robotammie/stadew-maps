@@ -19,8 +19,8 @@ export const Grass = {
   color: '#6AA84F',
 }
 
-export const Bush = {
-  name: 'Bush',
+export const Brush = {
+  name: 'Brush',
   buildable: false,
   farmable: false,
   color: '#228B22',
@@ -33,7 +33,8 @@ export const Water = {
   color: '#1E90FF',
 }
 
-export const Building = {
+export const Farmhouse = {
+  name: 'Farmhouse',
   buildable: false,
   farmable: false,
   color: '#6E6E6E',

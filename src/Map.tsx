@@ -1,6 +1,8 @@
 import Box from '@mui/material/Box';
-import { StandardMap } from './maps/Standard';
+import buildMapObject from './buildMapObject';
 import TerrainTile from './TerrainTile';
+
+const mapAddress = "./maps/TestMap.txt";
 
 const mapStyles = {
   width: 'full',
@@ -17,7 +19,7 @@ const rowStyles = {
 };
 
 const Map = () => {
-  const map = StandardMap
+  const map = buildMapObject(mapAddress);
   return (
     <Box sx={mapStyles}>
       {map.map((row: Tile[], i: number) => (
