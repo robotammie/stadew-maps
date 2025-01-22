@@ -24,6 +24,7 @@ const buildMapObject = (fileName: string) => {
   const mapObject = rows.map((row) => {
     return row.split(' ').map((cell) => {
       return {
+        building: undefined,
         terrain: buildTerrain(cell),
         settings: {},
       };
