@@ -1,3 +1,8 @@
+type Building = {
+  name: string;
+  sprite: React.JSX.Element;
+}
+
 type Terrain = {
   name: string;
   buildable: boolean;
@@ -8,15 +13,15 @@ type Terrain = {
 interface Buildable {buildable: true;}
 interface Farmable {farmable: true;}
 
-type Tile = {
-  building: string | undefined;
-  terrain: Terrain;
-  settings: TerrainSettings;
-}
 
 type TerrainSettings = {
   sprinkler?: boolean;
   junimo?: boolean;
   scarecrow?: boolean;
   beeHouse?: boolean;
+}
+type Tile = {
+  building: Building | undefined;
+  terrain: Terrain;
+  settings: TerrainSettings;
 }

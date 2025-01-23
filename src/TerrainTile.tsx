@@ -18,7 +18,7 @@ function tileStyles(tileData: Tile): any {
 };
 
 function tooltipText(tileData: Tile): string {
-  return `${tileData.building ? tileData.building : tileData.terrain.name}`;
+  return `${!!tileData.building ? tileData.building.name : tileData.terrain.name}`;
 }
 
 const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
@@ -29,40 +29,46 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const isBuilding = useStore((state) => state.isBuilding);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
 
-  let children = null;
   useEffect(() => {
-    if (isBuilding) {
-      if (props.tileData.terrain.buildable && currentStruct) {
-        props.tileData.building = currentStruct.className;
-        children = currentStruct;
+    if (isBuilding && props.tileData === currentTile) {
+      if (props.tileData.terrain.buildable && !props.tileData.building && !!currentStruct) {
+        props.tileData.building = currentStruct;
       }
       setIsBuilding(false);
     }
-  }, [isBuilding]);
+  }, [isBuilding, props.tileData, currentStruct, setIsBuilding]);
 
   return (
     <Tooltip title={tooltipText(props.tileData)}>
       <div
         style={tileStyles(props.tileData)}
+        onClick={(e) => {
+          console.log("onClick", props.tileData);
+          console.log(e.target);
+        }}
         onDragOver={(e) => {
           // console.log("onDragOver");
           let target = e.target as HTMLElement;
           if (props.tileData.terrain.buildable && !props.tileData.building) {
             target.style.backgroundColor = '#abfa7d';
-            setCurrentTile(target);
           } else {
            target.style.backgroundColor = '#de2c1f';
-           clearCurrentTile();
           }
+          // console.log(currentTile);
         }}
         onDragLeave={(e) => {
-          // console.log("onDragLeave");
           let target = e.target as HTMLElement;
+          if (props.tileData.terrain.buildable && !props.tileData.building) {
+            setCurrentTile(props.tileData);
+          } else {
+            clearCurrentTile();
+          }
           target.style.backgroundColor = props.tileData.terrain.color;
+          // console.log("onDragLeave");
           // debugger;
         }}
       >
-        { children }
+        { props.tileData.building ? props.tileData.building.sprite : null }
       </div>
     </Tooltip>
   );

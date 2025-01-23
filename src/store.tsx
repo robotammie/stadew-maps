@@ -1,10 +1,10 @@
 import create from 'zustand'
 
 interface MapState {
-  currentStruct: HTMLElement | undefined
-  setCurrentStruct: (struct: HTMLElement | undefined) => void
-  currentTile: HTMLElement | undefined
-  setCurrentTile: (tile: HTMLElement | undefined) => void
+  currentStruct: Building | undefined
+  setCurrentStruct: (struct: Building | undefined) => void
+  currentTile: Tile | undefined
+  setCurrentTile: (tile: Tile | undefined) => void
   clearCurrentTile: () => void
   isBuilding: boolean
   setIsBuilding: (isBuilding: boolean) => void

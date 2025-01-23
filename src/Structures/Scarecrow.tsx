@@ -20,6 +20,7 @@ const scarecrowSprite: React.JSX.Element = <img src={ScarecrowSvg} alt="Scarecro
 const Scarecrow: FC = () => {
   const setCurrentStruct = useStore((state) => state.setCurrentStruct);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
+
   return (
     <div
       className="scarecrow"
@@ -27,7 +28,7 @@ const Scarecrow: FC = () => {
       draggable={true}
       onDragStart={(e) => {
         console.log("onDragStart");
-        setCurrentStruct(e.target as HTMLElement);
+        setCurrentStruct({name: 'scarecrow', sprite: scarecrowSprite});
       }}
       onDragEnd={(_) => {
         console.log("onDragEnd");
