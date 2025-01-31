@@ -1,8 +1,8 @@
-import React,  { FC, ReactNode }  from 'react';
+import React,  { FC }  from 'react';
 
-import ScarecrowSvg from "../svgs/Scarecrow.svg";
-
+import ScarecrowSvg from '../svgs/Scarecrow.svg';
 import useStore from '../store';
+import { View } from '../types.d'
 
 
 let scarecrowStyles = {
@@ -20,19 +20,20 @@ const scarecrowSprite: React.JSX.Element = <img src={ScarecrowSvg} alt="Scarecro
 const Scarecrow: FC = () => {
   const setCurrentStruct = useStore((state) => state.setCurrentStruct);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
+  const setView = useStore((state) => state.setView);
 
   return (
     <div
-      className="scarecrow"
+      className="Scarecrow"
       style={scarecrowStyles}
       draggable={true}
       onDragStart={(e) => {
-        console.log("onDragStart");
-        setCurrentStruct({name: 'scarecrow', sprite: scarecrowSprite});
+        setCurrentStruct({name: 'Scarecrow', sprite: scarecrowSprite})
+        setView(View.Scarecrow);
       }}
       onDragEnd={(_) => {
-        console.log("onDragEnd");
         setIsBuilding(true);
+        setView(View.Standard);
       }}
     >
       { scarecrowSprite }

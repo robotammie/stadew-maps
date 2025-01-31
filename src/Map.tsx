@@ -1,4 +1,5 @@
 import Box from '@mui/material/Box';
+import { Tile } from './types.d';
 import buildMapObject from './buildMapObject';
 import TerrainTile from './TerrainTile';
 
