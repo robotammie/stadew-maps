@@ -1,22 +1,28 @@
-import React,  { useEffect }  from 'react';
+import React,  { useEffect, useLayoutEffect, useCallback }  from 'react';
 import { Tooltip } from '@mui/material';
+import { HaloColor, ScarecrowColor } from './constants';
 import useStore from './store';
-import { Tile, TerrainSettings, View, Struct } from './types.d';
-
-// TODO: AoE halo on drag, remove AoE from origin when moving
+import { Tile, View } from './types.d';
+import Scarecrow from './Structures/Scarecrow';
 
 type TerrainTileProps = {
   tileData: Tile;
 }
 
-function pickColor(view: View, tileData: Tile): string {
+function pickColor(view: View, tileData: Tile, destination?: number[] ): string {
   let fillColor
   switch (view) {
     case View.Standard:
       fillColor = tileData.terrain.color;
       break;
     case View.Scarecrow:
-      fillColor = tileData.settings.scarecrow ? 'purple' : tileData.terrain.color;
+      if (tileData.settings.scarecrow) {
+        fillColor = ScarecrowColor;
+      } else if (destination && tileData.aoEs.scarecrow.has(destination.toString())) {
+        fillColor = HaloColor;
+      } else {
+        fillColor = tileData.terrain.color
+      }
       break;
     default:
       fillColor = tileData.terrain.color;
@@ -24,14 +30,14 @@ function pickColor(view: View, tileData: Tile): string {
   return fillColor;
 }
 
-function tileStyles(view: View, tileData: Tile): any {
+function tileStyles(view: View, tileData: Tile, destination?: number[]): any {
   return{
     margin: 0,
     padding: 0,
     width: '20px',
     height: '20px',
     border: '1px solid black',
-    backgroundColor: pickColor(view, tileData),
+    backgroundColor: pickColor(view, tileData, destination),
   }
 };
 
@@ -52,35 +58,21 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const isBuilding = useStore((state) => state.isBuilding);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const scarecrows = useStore((state) => state.scarecrows);
-  const addScarecrow = useStore((state) => state.addScarecrow);
-  const removeScarecrow = useStore((state) => state.removeScarecrow);
 
-  const razeBuilding = (tile: Tile) => {
-    switch (tile.building?.name) {
-      case Struct.Scarecrow:
-        removeScarecrow(tile.coordinates);
-        break;
-      default:
-        break;
-      }
-    tile.building = undefined;
-  };
+  const razeBuilding = useCallback((tile: Tile) => {
+    tile.building?.raze(tile.coordinates);
+    props.tileData.building = undefined;
+  }, [props.tileData]);
 
   // Build structure on change in isBuilding (DragEnd)
-  useEffect(() => {
+  useLayoutEffect(() => {
     if (isBuilding && props.tileData === destinationTile) {
-      console.log(props.tileData.terrain.buildable);
-      console.log(!!currentStruct);
-      console.log(!props.tileData.building, destinationTile === originTile);
-      if (props.tileData.terrain.buildable && !!currentStruct && !props.tileData.building) {
-        props.tileData.building = currentStruct;
-        switch (currentStruct.name) {
-          case Struct.Scarecrow:
-            addScarecrow(props.tileData.coordinates);
-            break;
-          default:
-            break;
-        }
+      if (props.tileData.terrain.buildable
+        && !!currentStruct
+        && !props.tileData.building
+      ) {
+          props.tileData.building = currentStruct;
+          currentStruct.build(props.tileData.coordinates);
       }
       if (originTile && destinationTile !== originTile) {
         razeBuilding(originTile);
@@ -90,32 +82,41 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       clearDestinationTile();
       setView(View.Standard);
     }
-  }, [isBuilding, props.tileData, currentStruct, setIsBuilding, addScarecrow, destinationTile]);
+  }, [
+    isBuilding,
+    props.tileData,
+    currentStruct,
+    originTile,
+    destinationTile,
+    setIsBuilding,
+    razeBuilding,
+    clearDestinationTile,
+    clearOriginTile,
+    setView
+  ]);
 
+  // Update scarecrow range data after build
   useEffect(() => {
-    const settings = {
-      scarecrow: scarecrows.intersection(props.tileData.aoEs.scarecrow).size > 0,
-    } as TerrainSettings;
-    props.tileData.settings = settings;
-  }, [scarecrows, props.tileData]);
+    props.tileData.settings.scarecrow = scarecrows.intersection(props.tileData.aoEs.scarecrow).size > 0;
+  }, [
+    scarecrows,
+    props.tileData.aoEs.scarecrow,
+    props.tileData.settings,
+    props.tileData.coordinates
+  ]);
 
   return (
     <Tooltip title={tooltipText(props.tileData)}>
       <div
-        style={tileStyles(view, props.tileData)}
-        onMouseDown={(e) => {
+        style={tileStyles(view, props.tileData, destinationTile?.coordinates)}
+        onMouseDown={(_) => {
           setOriginTile(props.tileData);
-          switch (e.button) {
-            case 0:
-              setOriginTile(props.tileData);
-              break;
-            case 2:
-              razeBuilding(props.tileData);
-            default:
-              break;
-          }
+        }}
+        onDoubleClick={(_) => {
+          razeBuilding(props.tileData);
         }}
         onDragOver={(e) => {
+          setDestinationTile(props.tileData);
           let target = e.target as HTMLElement;
           if (props.tileData.terrain.buildable && !props.tileData.building) {
             target.style.backgroundColor = '#abfa7d';
@@ -125,14 +126,10 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         }}
         onDragLeave={(e) => {
           let target = e.target as HTMLElement;
-          setDestinationTile(props.tileData);
-          target.style.backgroundColor = pickColor(view, props.tileData);
+          target.style.backgroundColor = pickColor(view, props.tileData, destinationTile?.coordinates);
         }}
       >
-        { props.tileData.building
-          ? < props.tileData.building.sprite onMap={true} bgColor={pickColor(view, props.tileData)} />
-          : null
-        }
+        { scarecrows.has(props.tileData.coordinates.toString())  && < Scarecrow onMap={true} bgColor={pickColor(view, props.tileData)} />}
       </div>
     </Tooltip>
   );

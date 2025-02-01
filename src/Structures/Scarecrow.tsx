@@ -22,6 +22,8 @@ const Scarecrow: FC<StructProps> = (props) => {
   const setCurrentStruct = useStore((state) => state.setCurrentStruct);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setView = useStore((state) => state.setView);
+  const addScarecrow = useStore((state) => state.addScarecrow);
+  const removeScarecrow = useStore((state) => state.removeScarecrow);
 
   return (
     <div
@@ -29,7 +31,12 @@ const Scarecrow: FC<StructProps> = (props) => {
       style={scarecrowStyles(props)}
       draggable={true}
       onDragStart={(e) => {
-        setCurrentStruct({name: Struct.Scarecrow, sprite: Scarecrow});
+        setCurrentStruct({
+          name: Struct.Scarecrow,
+          sprite: Scarecrow,
+          build: addScarecrow,
+          raze: removeScarecrow,
+        });
         setView(View.Scarecrow);
         if (props.onMap) {
           ;

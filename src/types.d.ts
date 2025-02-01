@@ -24,6 +24,8 @@ export type StructProps = {
 export type Building = {
   name: string;
   sprite: React.FC<SructProps>;
+  build: (coordinates: [number, number]) => void;
+  raze: (coordinates: [number, number]) => void;
 }
 
 export type Terrain = {

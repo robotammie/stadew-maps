@@ -18,17 +18,18 @@ interface MapState {
   scarecrows: Set<string>
   addScarecrow: (coordinates: [number, number]) => void
   removeScarecrow: (coordinates: [number, number]) => void
+  // hoverStruct: Building | undefined
 }
 
 const addToSet = (set: Set<string>, coordinates: [number, number]) => {
   const newSet = new Set(set)
-  newSet.add(`${coordinates[0]}, ${coordinates[1]}`)
+  newSet.add(coordinates.toString())
   return newSet
 }
 
 const removeFromSet = (set: Set<string>, coordinates: [number, number]) => {
   const newSet = new Set(set)
-  newSet.delete(`${coordinates[0]}, ${coordinates[1]}`)
+  newSet.delete(coordinates.toString())
   return newSet
 }
 

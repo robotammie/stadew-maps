@@ -1,3 +1,7 @@
+// COLORS
+export const HaloColor = '#c9951a'
+export const ScarecrowColor = '#f2c600'
+
 export const Dirt = {
   name: 'Dirt',
   buildable: true,
