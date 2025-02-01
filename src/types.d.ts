@@ -6,9 +6,14 @@ export enum View {
   BeeHouse,
 }
 
+export type StructProps = {
+  onMap: boolean,
+  bgColor?: string,
+}
+
 export type Building = {
   name: string;
-  sprite: React.JSX.Element;
+  sprite: React.FC<SructProps>;
 }
 
 export type Terrain = {

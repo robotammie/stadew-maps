@@ -4,10 +4,13 @@ import { Building, Tile, View } from './types.d'
 
 interface MapState {
   currentStruct: Building | undefined
-  setCurrentStruct: (struct: Building | undefined) => void
-  currentTile: Tile | undefined
-  setCurrentTile: (tile: Tile | undefined) => void
-  clearCurrentTile: () => void
+  setCurrentStruct: (element: Building | undefined) => void
+  originTile: Tile | undefined
+  setOriginTile: (tile: Tile | undefined) => void
+  clearOriginTile: () => void
+  destinationTile: Tile | undefined
+  setDestinationTile: (tile: Tile | undefined) => void
+  clearDestinationTile: () => void
   isBuilding: boolean
   setIsBuilding: (isBuilding: boolean) => void
   view: View
@@ -32,9 +35,12 @@ const removeFromSet = (set: Set<string>, coordinates: [number, number]) => {
 const useStore = create<MapState>((set) => ({
   currentStruct: undefined,
   setCurrentStruct: (struct) => set({ currentStruct: struct }),
-  currentTile: undefined,
-  setCurrentTile: (tile) => set({ currentTile: tile }),
-  clearCurrentTile: () => set({ currentTile: undefined }),
+  originTile: undefined,
+  setOriginTile: (tile) => set({ originTile: tile }),
+  clearOriginTile: () => set({ originTile: undefined }),
+  destinationTile: undefined,
+  setDestinationTile: (tile) => set({ destinationTile: tile }),
+  clearDestinationTile: () => set({ destinationTile: undefined }),
   isBuilding: false,
   setIsBuilding: (isBuilding) => set({ isBuilding: isBuilding }),
   view: View.Standard,

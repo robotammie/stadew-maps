@@ -37,22 +37,35 @@ function tooltipText(tileData: Tile): string {
   return `${!!tileData.building ? tileData.building.name : tileData.terrain.name}`;
 }
 
-
-
 const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const view = useStore((state) => state.view);
   const currentStruct = useStore((state) => state.currentStruct);
-  const currentTile = useStore((state) => state.currentTile);
-  const setCurrentTile = useStore((state) => state.setCurrentTile);
-  const clearCurrentTile = useStore((state) => state.clearCurrentTile);
+  const destinationTile = useStore((state) => state.destinationTile);
+  const setDestinationTile = useStore((state) => state.setDestinationTile);
+  const clearDestinationTile = useStore((state) => state.clearDestinationTile);
+  const originTile = useStore((state) => state.originTile);
+  const setOriginTile = useStore((state) => state.setOriginTile);
+  const clearOriginTile = useStore((state) => state.clearOriginTile);
   const isBuilding = useStore((state) => state.isBuilding);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const scarecrows = useStore((state) => state.scarecrows);
   const addScarecrow = useStore((state) => state.addScarecrow);
+  const removeScarecrow = useStore((state) => state.removeScarecrow);
+
+  const razeBuilding = (tile: Tile) => {
+    switch (tile.building?.name) {
+      case 'Scarecrow':
+        removeScarecrow(tile.coordinates);
+        break;
+      default:
+        break;
+      }
+    tile.building = undefined;
+  };
 
   // Build structure on change in isBuilding (DragEnd)
   useEffect(() => {
-    if (isBuilding && props.tileData === currentTile) {
+    if (isBuilding && props.tileData === destinationTile) {
       if (props.tileData.terrain.buildable && !props.tileData.building && !!currentStruct) {
         props.tileData.building = currentStruct;
         switch (currentStruct.name) {
@@ -63,9 +76,14 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
             break;
         }
       }
+      if (originTile) {
+        razeBuilding(originTile);
+        clearOriginTile()
+      }
       setIsBuilding(false);
+      clearDestinationTile();
     }
-  }, [isBuilding, props.tileData, currentStruct, setIsBuilding, addScarecrow, currentTile]);
+  }, [isBuilding, props.tileData, currentStruct, setIsBuilding, addScarecrow, destinationTile]);
 
   useEffect(() => {
     const settings = {
@@ -78,8 +96,17 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     <Tooltip title={tooltipText(props.tileData)}>
       <div
         style={tileStyles(view, props.tileData)}
-        onClick={(e) => {
-          console.log("onClick", props.tileData);
+        onMouseDown={(e) => {
+          setOriginTile(props.tileData);
+          switch (e.button) {
+            case 0:
+              setOriginTile(props.tileData);
+              break;
+            case 2:
+              razeBuilding(props.tileData);
+            default:
+              break;
+          }
         }}
         onDragOver={(e) => {
           let target = e.target as HTMLElement;
@@ -91,15 +118,14 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         }}
         onDragLeave={(e) => {
           let target = e.target as HTMLElement;
-          if (props.tileData.terrain.buildable && !props.tileData.building) {
-            setCurrentTile(props.tileData);
-          } else {
-            clearCurrentTile();
-          }
+          setDestinationTile(props.tileData);
           target.style.backgroundColor = pickColor(view, props.tileData);
         }}
       >
-        { props.tileData.building ? props.tileData.building.sprite : null }
+        { props.tileData.building
+          ? < props.tileData.building.sprite onMap={true} bgColor={pickColor(view, props.tileData)} />
+          : null
+        }
       </div>
     </Tooltip>
   );

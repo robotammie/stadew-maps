@@ -2,22 +2,23 @@ import React,  { FC }  from 'react';
 
 import ScarecrowSvg from '../svgs/Scarecrow.svg';
 import useStore from '../store';
-import { View } from '../types.d'
+import { StructProps, View } from '../types.d'
 
-
-let scarecrowStyles = {
-  margin: '0px 10px',
-  padding: 0,
-  cursor: 'pointer',
-  width: '20px',
-  height: '20px',
-  border: '1px solid black',
-  backgroundColor: 'tan',
+const scarecrowStyles = (props: StructProps) => {
+  return {
+    margin: `0px ${props.onMap? 0 : 10}px`,
+    padding: 0,
+    cursor: 'pointer',
+    width: '20px',
+    height: '20px',
+    border: (props.onMap ? 'none' : '1px solid black'),
+    backgroundColor: props.bgColor || 'tan',
+  }
 };
 
 const scarecrowSprite: React.JSX.Element = <img src={ScarecrowSvg} alt="Scarecrow" height="100%" draggable={false}/>
 
-const Scarecrow: FC = () => {
+const Scarecrow: FC<StructProps> = (props) => {
   const setCurrentStruct = useStore((state) => state.setCurrentStruct);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setView = useStore((state) => state.setView);
@@ -25,13 +26,13 @@ const Scarecrow: FC = () => {
   return (
     <div
       className="Scarecrow"
-      style={scarecrowStyles}
+      style={scarecrowStyles(props)}
       draggable={true}
       onDragStart={(e) => {
-        setCurrentStruct({name: 'Scarecrow', sprite: scarecrowSprite})
+        setCurrentStruct({name: 'Scarecrow', sprite: Scarecrow});
         setView(View.Scarecrow);
       }}
-      onDragEnd={(_) => {
+      onDragEnd={(e) => {
         setIsBuilding(true);
         setView(View.Standard);
       }}

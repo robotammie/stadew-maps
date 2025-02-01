@@ -13,7 +13,7 @@ const StructureMenu = () => {
     <div>
       <Box sx={styles}>
         Scarecrow
-        <Scarecrow/>
+        <Scarecrow onMap={false}/>
       </Box>
     </div>
   );
