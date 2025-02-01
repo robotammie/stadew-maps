@@ -2,7 +2,7 @@ import React,  { FC }  from 'react';
 
 import ScarecrowSvg from '../svgs/Scarecrow.svg';
 import useStore from '../store';
-import { StructProps, View } from '../types.d'
+import { Struct, StructProps, View } from '../types.d'
 
 const scarecrowStyles = (props: StructProps) => {
   return {
@@ -16,7 +16,7 @@ const scarecrowStyles = (props: StructProps) => {
   }
 };
 
-const scarecrowSprite: React.JSX.Element = <img src={ScarecrowSvg} alt="Scarecrow" height="100%" draggable={false}/>
+const scarecrowSprite: React.JSX.Element = <img src={ScarecrowSvg} alt={Struct.Scarecrow} height="100%" draggable={false}/>
 
 const Scarecrow: FC<StructProps> = (props) => {
   const setCurrentStruct = useStore((state) => state.setCurrentStruct);
@@ -25,12 +25,15 @@ const Scarecrow: FC<StructProps> = (props) => {
 
   return (
     <div
-      className="Scarecrow"
+      className={Struct.Scarecrow}
       style={scarecrowStyles(props)}
       draggable={true}
       onDragStart={(e) => {
-        setCurrentStruct({name: 'Scarecrow', sprite: Scarecrow});
+        setCurrentStruct({name: Struct.Scarecrow, sprite: Scarecrow});
         setView(View.Scarecrow);
+        if (props.onMap) {
+          ;
+        }
       }}
       onDragEnd={(e) => {
         setIsBuilding(true);

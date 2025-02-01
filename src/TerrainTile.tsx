@@ -1,7 +1,9 @@
 import React,  { useEffect }  from 'react';
 import { Tooltip } from '@mui/material';
 import useStore from './store';
-import { Tile, TerrainSettings, View } from './types.d';
+import { Tile, TerrainSettings, View, Struct } from './types.d';
+
+// TODO: AoE halo on drag, remove AoE from origin when moving
 
 type TerrainTileProps = {
   tileData: Tile;
@@ -39,6 +41,7 @@ function tooltipText(tileData: Tile): string {
 
 const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const view = useStore((state) => state.view);
+  const setView = useStore((state) => state.setView);
   const currentStruct = useStore((state) => state.currentStruct);
   const destinationTile = useStore((state) => state.destinationTile);
   const setDestinationTile = useStore((state) => state.setDestinationTile);
@@ -54,7 +57,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
 
   const razeBuilding = (tile: Tile) => {
     switch (tile.building?.name) {
-      case 'Scarecrow':
+      case Struct.Scarecrow:
         removeScarecrow(tile.coordinates);
         break;
       default:
@@ -66,22 +69,26 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   // Build structure on change in isBuilding (DragEnd)
   useEffect(() => {
     if (isBuilding && props.tileData === destinationTile) {
-      if (props.tileData.terrain.buildable && !props.tileData.building && !!currentStruct) {
+      console.log(props.tileData.terrain.buildable);
+      console.log(!!currentStruct);
+      console.log(!props.tileData.building, destinationTile === originTile);
+      if (props.tileData.terrain.buildable && !!currentStruct && !props.tileData.building) {
         props.tileData.building = currentStruct;
         switch (currentStruct.name) {
-          case 'Scarecrow':
+          case Struct.Scarecrow:
             addScarecrow(props.tileData.coordinates);
             break;
           default:
             break;
         }
       }
-      if (originTile) {
+      if (originTile && destinationTile !== originTile) {
         razeBuilding(originTile);
-        clearOriginTile()
       }
       setIsBuilding(false);
+      clearOriginTile()
       clearDestinationTile();
+      setView(View.Standard);
     }
   }, [isBuilding, props.tileData, currentStruct, setIsBuilding, addScarecrow, destinationTile]);
 

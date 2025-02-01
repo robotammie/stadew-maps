@@ -6,6 +6,16 @@ export enum View {
   BeeHouse,
 }
 
+export enum Struct {
+  Scarecrow = 'Scarecrow',
+  Sprinkler = 'Sprinkler',
+  Sprinkler3x3 = 'Sprinkler 3x3',
+  Sprinkler4x4 = 'Sprinkler x4',
+  Sprinkler5x5 = 'Sprinkler 5x5',
+  JunimoHut = 'Junimo Hut',
+  BeeHouse = 'Bee House',
+}
+
 export type StructProps = {
   onMap: boolean,
   bgColor?: string,
