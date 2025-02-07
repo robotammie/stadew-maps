@@ -2,6 +2,7 @@ import React,  { useEffect, useLayoutEffect, useCallback }  from 'react';
 import { Tooltip } from '@mui/material';
 import { HaloColor, ScarecrowColor } from './constants';
 import useStore from './store';
+import useStructStore from './structStore';
 import { Structs, Tile, Views } from './types.d';
 import Scarecrow, {AoEFunction as ScarecrowAoEFunction} from './Structures/Scarecrow';
 
@@ -63,7 +64,7 @@ function allAoEs(
 const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const view = useStore((state) => state.view);
   const setView = useStore((state) => state.setView);
-  const currentStruct = useStore((state) => state.currentStruct);
+  const currentStruct = useStructStore((state) => state.currentStruct);
   const destinationTile = useStore((state) => state.destinationTile);
   const setDestinationTile = useStore((state) => state.setDestinationTile);
   const clearDestinationTile = useStore((state) => state.clearDestinationTile);
@@ -72,7 +73,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const isBuilding = useStore((state) => state.isBuilding);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
-  const scarecrows = useStore((state) => state.scarecrows);
+  const scarecrows = useStructStore((state) => state.scarecrows);
 
   const razeBuilding = useCallback((tile: Tile) => {
     tile.building?.raze(tile.coordinates);

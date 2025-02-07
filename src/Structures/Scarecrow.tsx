@@ -2,6 +2,7 @@ import React,  { FC }  from 'react';
 
 import ScarecrowSvg from '../svgs/Scarecrow.svg';
 import useStore from '../store';
+import useStructStore from '../structStore';
 import { Structs, StructProps, Views } from '../types.d'
 
 // const SCARECROW_RADIUS = 9;
@@ -36,12 +37,12 @@ const scarecrowSprite: React.JSX.Element =
   />
 
 const Scarecrow: FC<StructProps> = (props) => {
-  const setCurrentStruct = useStore((state) => state.setCurrentStruct);
-  const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setView = useStore((state) => state.setView);
-  const addScarecrow = useStore((state) => state.addScarecrow);
-  const removeScarecrow = useStore((state) => state.removeScarecrow);
   const clearOriginTile = useStore((state) => state.clearOriginTile);
+  const setIsBuilding = useStore((state) => state.setIsBuilding);
+  const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
+  const addScarecrow = useStructStore((state) => state.addScarecrow);
+  const removeScarecrow = useStructStore((state) => state.removeScarecrow);
 
   return (
     <div
