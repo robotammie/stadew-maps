@@ -15,9 +15,6 @@ export function AoEFunction(
   return (tile[0] - scarecrow[0]) ** 2 + (tile[1] - scarecrow[1]) ** 2 <= SCARECROW_RADIUS ** 2;
 }
 
-// check if given tile is within the aoE of any scarecrow
-
-
 const scarecrowStyles = (props: StructProps) => {
   return {
     margin: `0px ${props.onMap? 0 : 10}px`,
