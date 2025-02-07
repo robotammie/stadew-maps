@@ -2,6 +2,7 @@
 export const HaloColor = '#c9951a'
 export const ScarecrowColor = '#f2c600'
 
+// Terrain Types
 export const Dirt = {
   name: 'Dirt',
   buildable: true,

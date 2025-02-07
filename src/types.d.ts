@@ -1,4 +1,4 @@
-export enum View {
+export enum Views {
   Standard = 0,
   Scarecrow,
   Sprinkler,
@@ -6,7 +6,7 @@ export enum View {
   BeeHouse,
 }
 
-export enum Struct {
+export enum Structs {
   Scarecrow = 'Scarecrow',
   Sprinkler = 'Sprinkler',
   Sprinkler3x3 = 'Sprinkler 3x3',
@@ -22,7 +22,7 @@ export type StructProps = {
 }
 
 export type Building = {
-  name: string;
+  name: Structs;
   sprite: React.FC<SructProps>;
   build: (coordinates: [number, number]) => void;
   raze: (coordinates: [number, number]) => void;
@@ -35,21 +35,9 @@ export type Terrain = {
   color: string;
 }
 
-export type TerrainSettings = {
-  sprinkler?: boolean;
-  junimo?: boolean;
-  scarecrow?: boolean;
-  beeHouse?: boolean;
-}
-
 export type Tile = {
   coordinates: [number, number];
   building: Building | undefined;
   terrain: Terrain;
-  settings: TerrainSettings;
-  aoEs: AoEs;
-}
-
-export type AoEs = {
-  scarecrow : Set<string>;
+  aoes: Map<Views, boolean>;
 }

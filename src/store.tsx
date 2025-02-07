@@ -1,6 +1,6 @@
 import create from 'zustand'
 
-import { Building, Tile, View } from './types.d'
+import { Building, Tile, Views } from './types.d'
 
 interface MapState {
   currentStruct: Building | undefined
@@ -13,23 +13,23 @@ interface MapState {
   clearDestinationTile: () => void
   isBuilding: boolean
   setIsBuilding: (isBuilding: boolean) => void
-  view: View
-  setView: (view: View) => void
-  scarecrows: Set<string>
+  view: Views
+  setView: (view: Views) => void
+  scarecrows: Set<[number, number]>
   addScarecrow: (coordinates: [number, number]) => void
   removeScarecrow: (coordinates: [number, number]) => void
   // hoverStruct: Building | undefined
 }
 
-const addToSet = (set: Set<string>, coordinates: [number, number]) => {
+const addToSet = (set: Set<[number, number]>, coordinates: [number, number]) => {
   const newSet = new Set(set)
-  newSet.add(coordinates.toString())
+  newSet.add(coordinates)
   return newSet
 }
 
-const removeFromSet = (set: Set<string>, coordinates: [number, number]) => {
+const removeFromSet = (set: Set<[number, number]>, coordinates: [number, number]) => {
   const newSet = new Set(set)
-  newSet.delete(coordinates.toString())
+  newSet.delete(coordinates)
   return newSet
 }
 
@@ -44,7 +44,7 @@ const useStore = create<MapState>((set) => ({
   clearDestinationTile: () => set({ destinationTile: undefined }),
   isBuilding: false,
   setIsBuilding: (isBuilding) => set({ isBuilding: isBuilding }),
-  view: View.Standard,
+  view: Views.Standard,
   setView: (view) => set({ view: view }),
   scarecrows: new Set(),
   addScarecrow: (coordinates) => set((state) => ({

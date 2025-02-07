@@ -2,7 +2,21 @@ import React,  { FC }  from 'react';
 
 import ScarecrowSvg from '../svgs/Scarecrow.svg';
 import useStore from '../store';
-import { Struct, StructProps, View } from '../types.d'
+import { Structs, StructProps, Views } from '../types.d'
+
+// const SCARECROW_RADIUS = 9;
+const SCARECROW_RADIUS = 3;
+
+// check if given tile is within the aoE of a given scarecrow
+export function AoEFunction(
+  scarecrow: [number, number],
+  tile: [number, number]
+): boolean {
+  return (tile[0] - scarecrow[0]) ** 2 + (tile[1] - scarecrow[1]) ** 2 <= SCARECROW_RADIUS ** 2;
+}
+
+// check if given tile is within the aoE of any scarecrow
+
 
 const scarecrowStyles = (props: StructProps) => {
   return {
@@ -16,7 +30,13 @@ const scarecrowStyles = (props: StructProps) => {
   }
 };
 
-const scarecrowSprite: React.JSX.Element = <img src={ScarecrowSvg} alt={Struct.Scarecrow} height="100%" draggable={false}/>
+const scarecrowSprite: React.JSX.Element =
+  <img
+    src={ScarecrowSvg}
+    alt={Structs.Scarecrow}
+    height="100%"
+    draggable={false}
+  />
 
 const Scarecrow: FC<StructProps> = (props) => {
   const setCurrentStruct = useStore((state) => state.setCurrentStruct);
@@ -24,27 +44,27 @@ const Scarecrow: FC<StructProps> = (props) => {
   const setView = useStore((state) => state.setView);
   const addScarecrow = useStore((state) => state.addScarecrow);
   const removeScarecrow = useStore((state) => state.removeScarecrow);
+  const clearOriginTile = useStore((state) => state.clearOriginTile);
 
   return (
     <div
-      className={Struct.Scarecrow}
+      className={Structs.Scarecrow}
       style={scarecrowStyles(props)}
       draggable={true}
       onDragStart={(e) => {
         setCurrentStruct({
-          name: Struct.Scarecrow,
+          name: Structs.Scarecrow,
           sprite: Scarecrow,
           build: addScarecrow,
           raze: removeScarecrow,
         });
-        setView(View.Scarecrow);
-        if (props.onMap) {
-          ;
-        }
+        setView(Views.Scarecrow);
       }}
       onDragEnd={(e) => {
         setIsBuilding(true);
-        setView(View.Standard);
+        setView(Views.Standard);
+        clearOriginTile();
+        debugger;
       }}
     >
       { scarecrowSprite }

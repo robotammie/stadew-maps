@@ -2,23 +2,25 @@ import React,  { useEffect, useLayoutEffect, useCallback }  from 'react';
 import { Tooltip } from '@mui/material';
 import { HaloColor, ScarecrowColor } from './constants';
 import useStore from './store';
-import { Tile, View } from './types.d';
-import Scarecrow from './Structures/Scarecrow';
+import { Structs, Tile, Views } from './types.d';
+import Scarecrow, {AoEFunction as ScarecrowAoEFunction} from './Structures/Scarecrow';
 
 type TerrainTileProps = {
   tileData: Tile;
 }
 
-function pickColor(view: View, tileData: Tile, destination?: number[] ): string {
+function pickColor(view: Views, tileData: Tile, destination?: [number, number] ): string {
   let fillColor
   switch (view) {
-    case View.Standard:
+    case Views.Standard:
       fillColor = tileData.terrain.color;
       break;
-    case View.Scarecrow:
-      if (tileData.settings.scarecrow) {
+    case Views.Scarecrow:
+      if (!tileData.terrain.farmable) {
+        fillColor = tileData.terrain.color;
+      } else if (tileData.aoes.get(Views.Scarecrow)) {
         fillColor = ScarecrowColor;
-      } else if (destination && tileData.aoEs.scarecrow.has(destination.toString())) {
+      } else if (destination && ScarecrowAoEFunction(destination, tileData.coordinates)) {
         fillColor = HaloColor;
       } else {
         fillColor = tileData.terrain.color
@@ -30,7 +32,7 @@ function pickColor(view: View, tileData: Tile, destination?: number[] ): string 
   return fillColor;
 }
 
-function tileStyles(view: View, tileData: Tile, destination?: number[]): any {
+function tileStyles(view: Views, tileData: Tile, destination?: [number, number]): any {
   return{
     margin: 0,
     padding: 0,
@@ -43,6 +45,19 @@ function tileStyles(view: View, tileData: Tile, destination?: number[]): any {
 
 function tooltipText(tileData: Tile): string {
   return `${!!tileData.building ? tileData.building.name : tileData.terrain.name}`;
+}
+
+function allAoEs(
+  structs: Set<[number, number]>,
+  tile: [number, number],
+  AoEFunction: (struct: [number, number], tile: [number, number]) => boolean
+): boolean {
+  for (const struct of structs) {
+    if (AoEFunction(struct, tile)) {
+      return true;
+    }
+  };
+  return false;
 }
 
 const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
@@ -80,7 +95,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       setIsBuilding(false);
       clearOriginTile()
       clearDestinationTile();
-      setView(View.Standard);
+      setView(Views.Standard);
     }
   }, [
     isBuilding,
@@ -97,11 +112,13 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
 
   // Update scarecrow range data after build
   useEffect(() => {
-    props.tileData.settings.scarecrow = scarecrows.intersection(props.tileData.aoEs.scarecrow).size > 0;
+    props.tileData.aoes.set(
+      Views.Scarecrow,
+      allAoEs(scarecrows, props.tileData.coordinates, ScarecrowAoEFunction)
+    );
   }, [
     scarecrows,
-    props.tileData.aoEs.scarecrow,
-    props.tileData.settings,
+    props.tileData.aoes,
     props.tileData.coordinates
   ]);
 
@@ -111,11 +128,10 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         style={tileStyles(view, props.tileData, destinationTile?.coordinates)}
         onMouseDown={(_) => {
           setOriginTile(props.tileData);
-        }}
-        onDoubleClick={(_) => {
           razeBuilding(props.tileData);
         }}
         onDragOver={(e) => {
+          e.preventDefault()
           setDestinationTile(props.tileData);
           let target = e.target as HTMLElement;
           if (props.tileData.terrain.buildable && !props.tileData.building) {
@@ -125,11 +141,15 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
           }
         }}
         onDragLeave={(e) => {
+          // e.preventDefault()
           let target = e.target as HTMLElement;
           target.style.backgroundColor = pickColor(view, props.tileData, destinationTile?.coordinates);
         }}
       >
-        { scarecrows.has(props.tileData.coordinates.toString())  && < Scarecrow onMap={true} bgColor={pickColor(view, props.tileData)} />}
+        {
+          (scarecrows.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Scarecrow))
+          && < Scarecrow onMap={true} bgColor={pickColor(view, props.tileData)} />
+        }
       </div>
     </Tooltip>
   );
