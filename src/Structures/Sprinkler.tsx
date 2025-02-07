@@ -1,22 +1,24 @@
 import React,  { FC }  from 'react';
 
-import ScarecrowSvg from '../svgs/Scarecrow.svg';
+import SprinklerSvg from '../svgs/sprinkler1.svg';
 import useStore from '../store';
 import useStructStore from '../structStore';
 import { Structs, StructProps, Views } from '../types.d'
 
-// const SCARECROW_RADIUS = 9;
-const SCARECROW_RADIUS = 3;
-
-// check if given tile is within the aoE of a given scarecrow
+// check if given tile is within the aoE of a given sprinkler
 export function AoEFunction(
-  scarecrow: [number, number],
+  sprinkler: [number, number],
   tile: [number, number]
 ): boolean {
-  return (tile[0] - scarecrow[0]) ** 2 + (tile[1] - scarecrow[1]) ** 2 <= SCARECROW_RADIUS ** 2;
+  if (sprinkler[0] === tile[0]) {
+    return Math.abs(sprinkler[1] - tile[1]) === 1;
+  } else if (sprinkler[1] === tile[1]) {
+    return Math.abs(sprinkler[0] - tile[0]) === 1;
+  }
+  return false;
 }
 
-const scarecrowStyles = (props: StructProps) => {
+const styles = (props: StructProps) => {
   return {
     margin: `0px ${props.onMap? 0 : 10}px`,
     padding: 0,
@@ -28,35 +30,35 @@ const scarecrowStyles = (props: StructProps) => {
   }
 };
 
-const scarecrowSprite: React.JSX.Element =
+const sprinklerSprite: React.JSX.Element =
   <img
-    src={ScarecrowSvg}
-    alt={Structs.Scarecrow}
+    src={SprinklerSvg}
+    alt={Structs.Sprinkler}
     height="100%"
     draggable={false}
   />
 
-const Scarecrow: FC<StructProps> = (props) => {
+const Sprinkler: FC<StructProps> = (props) => {
   const setView = useStore((state) => state.setView);
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
-  const addScarecrow = useStructStore((state) => state.addScarecrow);
-  const removeScarecrow = useStructStore((state) => state.removeScarecrow);
+  const addSprinkler = useStructStore((state) => state.addSprinkler);
+  const removeSprinkler = useStructStore((state) => state.removeSprinkler);
 
   return (
     <div
-      className={Structs.Scarecrow}
-      style={scarecrowStyles(props)}
+      className={Structs.Sprinkler}
+      style={styles(props)}
       draggable={true}
       onDragStart={(e) => {
         setCurrentStruct({
-          name: Structs.Scarecrow,
-          sprite: Scarecrow,
-          build: addScarecrow,
-          raze: removeScarecrow,
+          name: Structs.Sprinkler,
+          sprite: Sprinkler,
+          build: addSprinkler,
+          raze: removeSprinkler,
         });
-        setView(Views.Scarecrow);
+        setView(Views.Sprinkler);
       }}
       onDragEnd={(e) => {
         setIsBuilding(true);
@@ -64,9 +66,9 @@ const Scarecrow: FC<StructProps> = (props) => {
         clearOriginTile();
       }}
     >
-      { scarecrowSprite }
+      { sprinklerSprite }
     </div>
   );
 };
 
-export default Scarecrow;
+export default Sprinkler;

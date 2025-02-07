@@ -1,10 +1,11 @@
 import React,  { useEffect, useLayoutEffect, useCallback }  from 'react';
 import { Tooltip } from '@mui/material';
-import { HaloColor, ScarecrowColor } from './constants';
+import { HaloColor, ScarecrowColor, SprinklerColor } from './constants';
 import useStore from './store';
 import useStructStore from './structStore';
 import { Structs, Tile, Views } from './types.d';
 import Scarecrow, {AoEFunction as ScarecrowAoEFunction} from './Structures/Scarecrow';
+import Sprinkler, {AoEFunction as SprinklerAoEFunction} from './Structures/Sprinkler';
 
 type TerrainTileProps = {
   tileData: Tile;
@@ -22,6 +23,17 @@ function pickColor(view: Views, tileData: Tile, destination?: [number, number] )
       } else if (tileData.aoes.get(Views.Scarecrow)) {
         fillColor = ScarecrowColor;
       } else if (destination && ScarecrowAoEFunction(destination, tileData.coordinates)) {
+        fillColor = HaloColor;
+      } else {
+        fillColor = tileData.terrain.color
+      }
+      break;
+    case Views.Sprinkler:
+      if (!tileData.terrain.farmable) {
+        fillColor = tileData.terrain.color;
+      } else if (tileData.aoes.get(Views.Sprinkler)) {
+        fillColor = SprinklerColor;
+      } else if (destination && SprinklerAoEFunction(destination, tileData.coordinates)) {
         fillColor = HaloColor;
       } else {
         fillColor = tileData.terrain.color
@@ -64,7 +76,6 @@ function allAoEs(
 const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const view = useStore((state) => state.view);
   const setView = useStore((state) => state.setView);
-  const currentStruct = useStructStore((state) => state.currentStruct);
   const destinationTile = useStore((state) => state.destinationTile);
   const setDestinationTile = useStore((state) => state.setDestinationTile);
   const clearDestinationTile = useStore((state) => state.clearDestinationTile);
@@ -73,7 +84,10 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const isBuilding = useStore((state) => state.isBuilding);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
+
+  const currentStruct = useStructStore((state) => state.currentStruct);
   const scarecrows = useStructStore((state) => state.scarecrows);
+  const sprinklers = useStructStore((state) => state.sprinklers);
 
   const razeBuilding = useCallback((tile: Tile) => {
     tile.building?.raze(tile.coordinates);
@@ -111,14 +125,19 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     setView
   ]);
 
-  // Update scarecrow range data after build
+  // Update range data after build
   useEffect(() => {
     props.tileData.aoes.set(
       Views.Scarecrow,
       allAoEs(scarecrows, props.tileData.coordinates, ScarecrowAoEFunction)
     );
+    props.tileData.aoes.set(
+      Views.Sprinkler,
+      allAoEs(sprinklers, props.tileData.coordinates, SprinklerAoEFunction)
+    );
   }, [
     scarecrows,
+    sprinklers,
     props.tileData.aoes,
     props.tileData.coordinates
   ]);
@@ -150,6 +169,10 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         {
           (scarecrows.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Scarecrow))
           && < Scarecrow onMap={true} bgColor={pickColor(view, props.tileData)} />
+        }
+        {
+          (sprinklers.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler))
+          && < Sprinkler onMap={true} bgColor={pickColor(view, props.tileData)} />
         }
       </div>
     </Tooltip>

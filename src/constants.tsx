@@ -1,6 +1,7 @@
 // COLORS
 export const HaloColor = '#c9951a'
 export const ScarecrowColor = '#f2c600'
+export const SprinklerColor = '#3074c7'
 
 // Terrain Types
 export const Dirt = {
