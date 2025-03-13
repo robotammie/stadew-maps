@@ -8,9 +8,9 @@ interface MapState {
   scarecrows: Set<[number, number]>
   addScarecrow: (coordinates: [number, number]) => void
   removeScarecrow: (coordinates: [number, number]) => void
-  sprinklers: Set<[number, number]>
-  addSprinkler: (coordinates: [number, number]) => void
-  removeSprinkler: (coordinates: [number, number]) => void
+  sprinkler1s: Set<[number, number]>
+  addSprinkler1: (coordinates: [number, number]) => void
+  removeSprinkler1: (coordinates: [number, number]) => void
 }
 
 const addToSet = (set: Set<[number, number]>, coordinates: [number, number]) => {
@@ -35,12 +35,12 @@ const useStore = create<MapState>((set) => ({
   removeScarecrow: (coordinates) => set((state) => ({
     scarecrows: removeFromSet(state.scarecrows, coordinates)
   })),
-  sprinklers: new Set(),
-  addSprinkler: (coordinates) => set((state) => ({
-    sprinklers: addToSet(state.sprinklers, coordinates)
+  sprinkler1s: new Set(),
+  addSprinkler1: (coordinates) => set((state) => ({
+    sprinkler1s: addToSet(state.sprinkler1s, coordinates)
   })),
-  removeSprinkler: (coordinates) => set((state) => ({
-    sprinklers: removeFromSet(state.sprinklers, coordinates)
+  removeSprinkler1: (coordinates) => set((state) => ({
+    sprinkler1s: removeFromSet(state.sprinkler1s, coordinates)
   })),
 }))
 

@@ -5,7 +5,7 @@ import useStore from './store';
 import useStructStore from './structStore';
 import { Structs, Tile, Views } from './types.d';
 import Scarecrow, {AoEFunction as ScarecrowAoEFunction} from './Structures/Scarecrow';
-import Sprinkler, {AoEFunction as SprinklerAoEFunction} from './Structures/Sprinkler';
+import Sprinkler1, {AoEFunction as Sprinkler1AoEFunction} from './Structures/Sprinkler1';
 
 type TerrainTileProps = {
   tileData: Tile;
@@ -33,7 +33,7 @@ function pickColor(view: Views, tileData: Tile, destination?: [number, number] )
         fillColor = tileData.terrain.color;
       } else if (tileData.aoes.get(Views.Sprinkler)) {
         fillColor = SprinklerColor;
-      } else if (destination && SprinklerAoEFunction(destination, tileData.coordinates)) {
+      } else if (destination && Sprinkler1AoEFunction(destination, tileData.coordinates)) {
         fillColor = HaloColor;
       } else {
         fillColor = tileData.terrain.color
@@ -88,7 +88,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
 
   const currentStruct = useStructStore((state) => state.currentStruct);
   const scarecrows = useStructStore((state) => state.scarecrows);
-  const sprinklers = useStructStore((state) => state.sprinklers);
+  const sprinkler1s = useStructStore((state) => state.sprinkler1s);
 
   const razeBuilding = useCallback((tile: Tile) => {
     tile.building?.raze(tile.coordinates);
@@ -134,11 +134,11 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     );
     props.tileData.aoes.set(
       Views.Sprinkler,
-      allAoEs(sprinklers, props.tileData.coordinates, SprinklerAoEFunction)
+      allAoEs(sprinkler1s, props.tileData.coordinates, Sprinkler1AoEFunction)
     );
   }, [
     scarecrows,
-    sprinklers,
+    sprinkler1s,
     props.tileData.aoes,
     props.tileData.coordinates
   ]);
@@ -173,8 +173,8 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
           && < Scarecrow onMap={true} bgColor={pickColor(view, props.tileData)} />
         }
         {
-          (sprinklers.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler))
-          && < Sprinkler onMap={true} bgColor={pickColor(view, props.tileData)} />
+          (sprinkler1s.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler1))
+          && < Sprinkler1 onMap={true} bgColor={pickColor(view, props.tileData)} />
         }
       </div>
     </Tooltip>

@@ -8,10 +8,10 @@ export enum Views {
 
 export enum Structs {
   Scarecrow = 'Scarecrow',
-  Sprinkler = 'Sprinkler',
-  Sprinkler3x3 = 'Sprinkler 3x3',
-  Sprinkler4x4 = 'Sprinkler x4',
-  Sprinkler5x5 = 'Sprinkler 5x5',
+  Sprinkler1 = 'Base Sprinkler',
+  Sprinkler2 = 'Sprinkler 3x3',
+  Sprinkler3 = 'Sprinkler x4',
+  Sprinkler4 = 'Sprinkler 5x5',
   JunimoHut = 'Junimo Hut',
   BeeHouse = 'Bee House',
 }

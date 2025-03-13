@@ -5,6 +5,8 @@ import useStore from '../store';
 import useStructStore from '../structStore';
 import { Structs, StructProps, Views } from '../types.d'
 
+import { styles } from './BaseStruct';
+
 // const SCARECROW_RADIUS = 9;
 const SCARECROW_RADIUS = 3;
 
@@ -15,18 +17,6 @@ export function AoEFunction(
 ): boolean {
   return (tile[0] - scarecrow[0]) ** 2 + (tile[1] - scarecrow[1]) ** 2 <= SCARECROW_RADIUS ** 2;
 }
-
-const scarecrowStyles = (props: StructProps) => {
-  return {
-    margin: `0px ${props.onMap? 0 : 10}px`,
-    padding: 0,
-    cursor: 'pointer',
-    width: '20px',
-    height: '20px',
-    border: (props.onMap ? 'none' : '1px solid black'),
-    backgroundColor: props.bgColor || 'tan',
-  }
-};
 
 const scarecrowSprite: React.JSX.Element =
   <img
@@ -47,7 +37,7 @@ const Scarecrow: FC<StructProps> = (props) => {
   return (
     <div
       className={Structs.Scarecrow}
-      style={scarecrowStyles(props)}
+      style={styles(props)}
       draggable={true}
       onDragStart={(e) => {
         setCurrentStruct({

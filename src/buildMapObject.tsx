@@ -30,7 +30,7 @@ const buildMapObject = (fileName: string) => {
         coordinates: [j, i],
         building: undefined,
         terrain: terrain as Terrain,
-        aoes: new Map<Views, boolean>,
+        aoes: new Map<Views, boolean>(),
       } as Tile;
     });
   });

@@ -1,9 +1,11 @@
 import React,  { FC }  from 'react';
 
-import SprinklerSvg from '../svgs/sprinkler1.svg';
+import Sprinkler1Svg from '../svgs/sprinkler1.svg';
 import useStore from '../store';
 import useStructStore from '../structStore';
-import { Structs, StructProps, Views } from '../types.d'
+import { Structs, StructProps, Views } from '../types.d';
+
+import { styles } from './BaseStruct';
 
 // check if given tile is within the aoE of a given sprinkler
 export function AoEFunction(
@@ -18,45 +20,33 @@ export function AoEFunction(
   return false;
 }
 
-const styles = (props: StructProps) => {
-  return {
-    margin: `0px ${props.onMap? 0 : 10}px`,
-    padding: 0,
-    cursor: 'pointer',
-    width: '20px',
-    height: '20px',
-    border: (props.onMap ? 'none' : '1px solid black'),
-    backgroundColor: props.bgColor || 'tan',
-  }
-};
-
-const sprinklerSprite: React.JSX.Element =
+const sprinkler1Sprite: React.JSX.Element =
   <img
-    src={SprinklerSvg}
-    alt={Structs.Sprinkler}
+    src={Sprinkler1Svg}
+    alt={Structs.Sprinkler1}
     height="100%"
     draggable={false}
   />
 
-const Sprinkler: FC<StructProps> = (props) => {
+const Sprinkler1: FC<StructProps> = (props) => {
   const setView = useStore((state) => state.setView);
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
-  const addSprinkler = useStructStore((state) => state.addSprinkler);
-  const removeSprinkler = useStructStore((state) => state.removeSprinkler);
+  const addSprinkler1 = useStructStore((state) => state.addSprinkler1);
+  const removeSprinkler1 = useStructStore((state) => state.removeSprinkler1);
 
   return (
     <div
-      className={Structs.Sprinkler}
+      className={Structs.Sprinkler1}
       style={styles(props)}
       draggable={true}
       onDragStart={(e) => {
         setCurrentStruct({
-          name: Structs.Sprinkler,
-          sprite: Sprinkler,
-          build: addSprinkler,
-          raze: removeSprinkler,
+          name: Structs.Sprinkler1,
+          sprite: Sprinkler1,
+          build: addSprinkler1,
+          raze: removeSprinkler1,
         });
         setView(Views.Sprinkler);
       }}
@@ -66,9 +56,9 @@ const Sprinkler: FC<StructProps> = (props) => {
         clearOriginTile();
       }}
     >
-      { sprinklerSprite }
+      { sprinkler1Sprite }
     </div>
   );
 };
 
-export default Sprinkler;
+export default Sprinkler1;

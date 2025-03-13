@@ -1,28 +1,35 @@
 import { Box } from "@mui/material";
+import { Structs } from "./types.d";
 import Scarecrow from "./Structures/Scarecrow";
-import Sprinkler from "./Structures/Sprinkler";
+import Sprinkler1 from "./Structures/Sprinkler1";
 
-const styles = {
+const spriteStyles = {
   margin: 0,
   padding: '5px 10px',
   width: 'full',
   display: 'flex',
 };
 
+const textStyles = {
+  margin: '0px 10px',
+  width: '120px',
+  'text-align': 'left',
+};
+
 const StructureMenu = () => {
   return (
     <div>
-      <Box sx={styles}>
-        <div style={{margin: '0px 10px', width: '80px'}}>
+      <Box sx={spriteStyles}>
+        <Scarecrow onMap={false}/>
+        <div style={textStyles}>
             Scarecrow
         </div>
-        <Scarecrow onMap={false}/>
       </Box>
-      <Box sx={styles}>
-        <div style={{margin: '0px 10px', width: '80px'}}>
-            Sprinkler
+      <Box sx={spriteStyles}>
+        <Sprinkler1 onMap={false}/>
+        <div style={textStyles}>
+            {Structs.Sprinkler1}
         </div>
-        <Sprinkler onMap={false}/>
       </Box>
     </div>
   );
