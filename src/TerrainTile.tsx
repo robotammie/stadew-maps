@@ -83,6 +83,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const setOriginTile = useStore((state) => state.setOriginTile);
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const isBuilding = useStore((state) => state.isBuilding);
+  const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
 
   const currentStruct = useStructStore((state) => state.currentStruct);
@@ -148,6 +149,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         style={tileStyles(view, props.tileData, destinationTile?.coordinates)}
         onMouseDown={(_) => {
           setOriginTile(props.tileData);
+          setCurrentStruct(props.tileData.building);
           razeBuilding(props.tileData);
         }}
         onDragOver={(e) => {
