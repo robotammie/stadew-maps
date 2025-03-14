@@ -10,7 +10,7 @@ export enum Structs {
   Scarecrow = 'Scarecrow',
   Sprinkler1 = 'Base Sprinkler',
   Sprinkler2 = 'Sprinkler 3x3',
-  Sprinkler3 = 'Sprinkler x4',
+  Sprinkler3 = 'Sprinkler 4x4',
   Sprinkler4 = 'Sprinkler 5x5',
   JunimoHut = 'Junimo Hut',
   BeeHouse = 'Bee House',
@@ -26,6 +26,7 @@ export type Building = {
   sprite: React.FC<SructProps>;
   build: (coordinates: [number, number]) => void;
   raze: (coordinates: [number, number]) => void;
+  aoeFunction: (struct: [number, number], tile: [number, number]) => boolean;
 }
 
 export type Terrain = {

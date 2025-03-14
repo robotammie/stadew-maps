@@ -12,10 +12,10 @@ const SCARECROW_RADIUS = 3;
 
 // check if given tile is within the aoE of a given scarecrow
 export function AoEFunction(
-  scarecrow: [number, number],
+  struct: [number, number],
   tile: [number, number]
 ): boolean {
-  return (tile[0] - scarecrow[0]) ** 2 + (tile[1] - scarecrow[1]) ** 2 <= SCARECROW_RADIUS ** 2;
+  return (tile[0] - struct[0]) ** 2 + (tile[1] - struct[1]) ** 2 <= SCARECROW_RADIUS ** 2;
 }
 
 const scarecrowSprite: React.JSX.Element =
@@ -45,6 +45,7 @@ const Scarecrow: FC<StructProps> = (props) => {
           sprite: Scarecrow,
           build: addScarecrow,
           raze: removeScarecrow,
+          aoeFunction: AoEFunction,
         });
         setView(Views.Scarecrow);
       }}

@@ -2,6 +2,9 @@ import { Box } from "@mui/material";
 import { Structs } from "./types.d";
 import Scarecrow from "./Structures/Scarecrow";
 import Sprinkler1 from "./Structures/Sprinkler1";
+import Sprinkler2 from "./Structures/Sprinkler2";
+import Sprinkler3 from "./Structures/Sprinkler3";
+import Sprinkler4 from "./Structures/Sprinkler4";
 
 const spriteStyles = {
   margin: 0,
@@ -29,6 +32,24 @@ const StructureMenu = () => {
         <Sprinkler1 onMap={false}/>
         <div style={textStyles}>
             {Structs.Sprinkler1}
+        </div>
+      </Box>
+      <Box sx={spriteStyles}>
+        <Sprinkler2 onMap={false}/>
+        <div style={textStyles}>
+            {Structs.Sprinkler2}
+        </div>
+      </Box>
+      <Box sx={spriteStyles}>
+        <Sprinkler3 onMap={false}/>
+        <div style={textStyles}>
+            {Structs.Sprinkler3}
+        </div>
+      </Box>
+      <Box sx={spriteStyles}>
+        <Sprinkler4 onMap={false}/>
+        <div style={textStyles}>
+            {Structs.Sprinkler4}
         </div>
       </Box>
     </div>

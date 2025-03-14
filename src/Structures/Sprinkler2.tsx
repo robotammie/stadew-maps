@@ -1,6 +1,6 @@
 import React,  { FC }  from 'react';
 
-import Sprinkler1Svg from '../svgs/sprinkler1.svg';
+import Sprinkler2Svg from '../svgs/sprinkler2.svg';
 import useStore from '../store';
 import useStructStore from '../structStore';
 import { Structs, StructProps, Views } from '../types.d';
@@ -12,41 +12,36 @@ export function AoEFunction(
   struct: [number, number],
   tile: [number, number]
 ): boolean {
-  if (struct[0] === tile[0]) {
-    return Math.abs(struct[1] - tile[1]) === 1;
-  } else if (struct[1] === tile[1]) {
-    return Math.abs(struct[0] - tile[0]) === 1;
-  }
-  return false;
+  return Math.abs(tile[0] - struct[0]) <= 1 && Math.abs(tile[1] - struct[1]) <= 1;
 }
 
-const sprinkler1Sprite: React.JSX.Element =
+const sprinkler2Sprite: React.JSX.Element =
   <img
-    src={Sprinkler1Svg}
-    alt={Structs.Sprinkler1}
+    src={Sprinkler2Svg}
+    alt={Structs.Sprinkler2}
     height="100%"
     draggable={false}
   />
 
-const Sprinkler1: FC<StructProps> = (props) => {
+const Sprinkler2: FC<StructProps> = (props) => {
   const setView = useStore((state) => state.setView);
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
-  const addSprinkler1 = useStructStore((state) => state.addSprinkler1);
-  const removeSprinkler1 = useStructStore((state) => state.removeSprinkler1);
+  const addSprinkler2 = useStructStore((state) => state.addSprinkler2);
+  const removeSprinkler2 = useStructStore((state) => state.removeSprinkler2);
 
   return (
     <div
-      className={Structs.Sprinkler1}
+      className={Structs.Sprinkler2}
       style={styles(props)}
       draggable={true}
       onDragStart={(e) => {
         setCurrentStruct({
-          name: Structs.Sprinkler1,
-          sprite: Sprinkler1,
-          build: addSprinkler1,
-          raze: removeSprinkler1,
+          name: Structs.Sprinkler2,
+          sprite: Sprinkler2,
+          build: addSprinkler2,
+          raze: removeSprinkler2,
           aoeFunction: AoEFunction,
         });
         setView(Views.Sprinkler);
@@ -57,9 +52,9 @@ const Sprinkler1: FC<StructProps> = (props) => {
         clearOriginTile();
       }}
     >
-      { sprinkler1Sprite }
+      { sprinkler2Sprite }
     </div>
   );
 };
 
-export default Sprinkler1;
+export default Sprinkler2;
