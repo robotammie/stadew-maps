@@ -20,6 +20,9 @@ interface MapState {
   sprinkler4s: Set<[number, number]>
   addSprinkler4: (coordinates: [number, number]) => void
   removeSprinkler4: (coordinates: [number, number]) => void
+  junimoHuts: Set<[number, number]>
+  addJunimoHut: (coordinates: [number, number]) => void
+  removeJunimoHut: (coordinates: [number, number]) => void
 }
 
 const addToSet = (set: Set<[number, number]>, coordinates: [number, number]) => {
@@ -71,6 +74,13 @@ const useStore = create<MapState>((set) => ({
   })),
   removeSprinkler4: (coordinates) => set((state) => ({
     sprinkler4s: removeFromSet(state.sprinkler4s, coordinates)
+  })),
+  junimoHuts: new Set(),
+  addJunimoHut: (coordinates) => set((state) => ({
+    junimoHuts: addToSet(state.junimoHuts, coordinates)
+  })),
+  removeJunimoHut: (coordinates) => set((state) => ({
+    junimoHuts: removeFromSet(state.junimoHuts, coordinates)
   })),
 }))
 

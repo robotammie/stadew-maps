@@ -41,6 +41,14 @@ const ViewSelector: React.FC  = () => {
             >
               Scarecrow
             </MenuItem>
+            <MenuItem
+              onClick={() => {
+                setView(Views.Junimo);
+                popupState.close();
+              }}
+            >
+              Junimo Hut
+            </MenuItem>
           </Menu>
         </React.Fragment>
       )}
