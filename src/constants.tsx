@@ -1,14 +1,15 @@
 // COLORS
-export const HaloColor = '#c9951a'
-export const ScarecrowColor = '#f2c600'
-export const SprinklerColor = '#3074c7'
+export const FieldColor = '#8c5703'
+export const FieldColorHalo = '#8c7703'
+export const DirtColorHalo = '#cfa004'
+
 
 // Terrain Types
 export const Dirt = {
   name: 'Dirt',
   buildable: true,
   farmable: true,
-  color: '#CE7E00',
+  color: '#cf8004',
 }
 
 export const Marsh = {

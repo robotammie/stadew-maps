@@ -51,7 +51,7 @@ const Scarecrow: FC<StructProps> = (props) => {
       }}
       onDragEnd={(e) => {
         setIsBuilding(true);
-        setView(Views.Standard);
+        setView(Views.Sprinkler);
         clearOriginTile();
       }}
     >

@@ -1,6 +1,6 @@
 import React,  { useEffect, useLayoutEffect, useCallback }  from 'react';
 import { Tooltip } from '@mui/material';
-import { HaloColor, ScarecrowColor, SprinklerColor } from './constants';
+import { FieldColor, FieldColorHalo, DirtColorHalo } from './constants';
 import useStore from './store';
 import useStructStore from './structStore';
 import { Building, Structs, Tile, Views } from './types.d';
@@ -14,6 +14,15 @@ type TerrainTileProps = {
   tileData: Tile;
 }
 
+function isIrrigated(tileData: Tile): boolean {
+  if (!tileData.terrain.farmable) {
+    return false;
+  } else if (tileData.aoes.get(Views.Sprinkler)) {
+    return true;
+  }
+  return false;
+}
+
 function pickColor(
   view: Views,
   struct: Building | undefined,
@@ -22,33 +31,40 @@ function pickColor(
 ): string {
   let fillColor
   switch (view) {
-    case Views.Standard:
-      fillColor = tileData.terrain.color;
+    case Views.Sprinkler:
+      if (isIrrigated(tileData)) {
+        fillColor = FieldColor;
+      } else if (destination && struct?.aoeFunction(destination, tileData.coordinates)) {
+        fillColor = DirtColorHalo;
+      } else {
+        fillColor = tileData.terrain.color
+      }
       break;
     case Views.Scarecrow:
       if (!tileData.terrain.farmable) {
         fillColor = tileData.terrain.color;
-      } else if (tileData.aoes.get(Views.Scarecrow)) {
-        fillColor = ScarecrowColor;
-      } else if (destination && struct?.aoeFunction(destination, tileData.coordinates)) {
-        fillColor = HaloColor;
+      } else if (tileData.aoes.get(Views.Scarecrow) || (destination && struct?.aoeFunction(destination, tileData.coordinates))) {
+        if (isIrrigated(tileData)){
+          fillColor = FieldColorHalo;
+        }
+        else {
+          fillColor = DirtColorHalo;
+        }
       } else {
-        fillColor = tileData.terrain.color
-      }
-      break;
-    case Views.Sprinkler:
-      if (!tileData.terrain.farmable) {
-        fillColor = tileData.terrain.color;
-      } else if (tileData.aoes.get(Views.Sprinkler)) {
-        fillColor = SprinklerColor;
-      } else if (destination && struct?.aoeFunction(destination, tileData.coordinates)) {
-        fillColor = HaloColor;
-      } else {
-        fillColor = tileData.terrain.color
+        if (isIrrigated(tileData)){
+          fillColor = FieldColor;
+        }
+        else {
+          fillColor = tileData.terrain.color
+        }
       }
       break;
     default:
-      fillColor = tileData.terrain.color;
+      if (isIrrigated(tileData)) {
+        fillColor = FieldColor;
+      } else {
+        fillColor = tileData.terrain.color
+      }
   }
   return fillColor;
 }
@@ -128,7 +144,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       setIsBuilding(false);
       clearOriginTile()
       clearDestinationTile();
-      setView(Views.Standard);
+      setView(Views.Sprinkler);
     }
   }, [
     isBuilding,

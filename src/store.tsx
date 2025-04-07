@@ -24,7 +24,7 @@ const useStore = create<MapState>((set) => ({
   clearDestinationTile: () => set({ destinationTile: undefined }),
   isBuilding: false,
   setIsBuilding: (isBuilding) => set({ isBuilding: isBuilding }),
-  view: Views.Standard,
+  view: Views.Sprinkler,
   setView: (view) => set({ view: view }),
   scarecrows: new Set(),
 }))

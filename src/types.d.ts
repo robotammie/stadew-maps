@@ -1,7 +1,6 @@
 export enum Views {
-  Standard = 0,
+  Sprinkler = 0,
   Scarecrow,
-  Sprinkler,
   Junimo, 
   BeeHouse,
 }

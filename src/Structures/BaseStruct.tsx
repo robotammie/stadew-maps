@@ -8,6 +8,6 @@ export const styles = (props: StructProps) => {
     width: '20px',
     height: '20px',
     border: (props.onMap ? 'none' : '1px solid black'),
-    backgroundColor: props.bgColor || 'tan',
+    backgroundColor: props.bgColor || 'beige',
   }
 };
