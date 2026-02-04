@@ -2,7 +2,7 @@
   "name": "stardew-maps",
   "version": "0.1.0",
   "private": true,
-  "homepage": "/stardew-maps",
+  "homepage": "https://robotammie.github.io/stardew-maps",
   "dependencies": {
     "@emotion/react": "^11.14.0",
     "@emotion/styled": "^11.14.0",
