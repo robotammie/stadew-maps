@@ -19,7 +19,7 @@ const buildTerrain = (cell: string) => {
   }
 }
 
-const buildMapObject = (fileName: string) => {
+const buildMapObject = () => {
   const map = TestMap as string
   const rows = map.split('\n');
   const mapObject = rows.map((row, i) => {

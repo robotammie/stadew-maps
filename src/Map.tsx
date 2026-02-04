@@ -3,8 +3,6 @@ import { Tile } from './types.d';
 import buildMapObject from './buildMapObject';
 import TerrainTile from './TerrainTile';
 
-const mapAddress = "./maps/TestMap.txt";
-
 const mapStyles = {
   width: 'full',
   display: 'flex',
@@ -20,7 +18,7 @@ const rowStyles = {
 };
 
 const Map = () => {
-  const map = buildMapObject(mapAddress);
+  const map = buildMapObject();
   return (
     <Box sx={mapStyles}>
       {map.map((row: Tile[], i: number) => (
