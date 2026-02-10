@@ -13,7 +13,7 @@ export function AoEFunction(
   tile: [number, number]
 ): boolean {
   if (struct[0] === tile[0]) {
-    return Math.abs(struct[1] - tile[1]) === 1;
+    return Math.abs(struct[1] - tile[1]) <= 1;
   } else if (struct[1] === tile[1]) {
     return Math.abs(struct[0] - tile[0]) === 1;
   }
