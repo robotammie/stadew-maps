@@ -1,3 +1,4 @@
+import React, { useMemo } from 'react';
 import Box from '@mui/material/Box';
 import { Tile } from './types.d';
 import buildMapObject from './buildMapObject';
@@ -18,7 +19,7 @@ const rowStyles = {
 };
 
 const Map = () => {
-  const map = buildMapObject();
+  const map = useMemo(() => buildMapObject(), []);
   return (
     <Box sx={mapStyles}>
       {map.map((row: Tile[], i: number) => (

@@ -1,4 +1,4 @@
-import React,  { useEffect, useLayoutEffect, useCallback }  from 'react';
+import React,  { useLayoutEffect, useCallback, useState }  from 'react';
 import { Tooltip } from '@mui/material';
 import { FieldColor, FieldColorHalo, DirtColorHalo } from './constants';
 import useStore from './store';
@@ -123,10 +123,32 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const sprinkler3s = useStructStore((state) => state.sprinkler3s);
   const sprinkler4s = useStructStore((state) => state.sprinkler4s);
 
+  // State to force re-render when AOE updates
+  const [, forceUpdate] = useState(0);
+
+  // Helper function to update AOE for a tile and force re-render
+  const updateTileAoe = useCallback((tile: Tile) => {
+    tile.aoes.set(
+      Views.Scarecrow,
+      allAoEs(scarecrows, tile.coordinates, ScarecrowAoEFunction)
+    );
+    tile.aoes.set(
+      Views.Sprinkler,
+      (allAoEs(sprinkler1s, tile.coordinates, Sprinkler1AoEFunction)
+      || allAoEs(sprinkler2s, tile.coordinates, Sprinkler2AoEFunction)
+      || allAoEs(sprinkler3s, tile.coordinates, Sprinkler3AoEFunction)
+      || allAoEs(sprinkler4s, tile.coordinates, Sprinkler4AoEFunction))
+    );
+    // Force re-render by updating state
+    forceUpdate(prev => prev + 1);
+  }, [scarecrows, sprinkler1s, sprinkler2s, sprinkler3s, sprinkler4s]);
+
   const razeBuilding = useCallback((tile: Tile) => {
     tile.building?.raze(tile.coordinates);
-    props.tileData.building = undefined;
-  }, [props.tileData]);
+    tile.building = undefined;
+    // Update AOE immediately after raze
+    updateTileAoe(tile);
+  }, [updateTileAoe]);
 
   // Build structure on change in isBuilding (DragEnd)
   useLayoutEffect(() => {
@@ -137,6 +159,8 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       ) {
           props.tileData.building = currentStruct;
           currentStruct.build(props.tileData.coordinates);
+          // Update AOE immediately after build
+          updateTileAoe(props.tileData);
       }
       if (originTile && destinationTile !== originTile) {
         razeBuilding(originTile);
@@ -156,30 +180,21 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     razeBuilding,
     clearDestinationTile,
     clearOriginTile,
-    setView
+    setView,
+    updateTileAoe
   ]);
 
-  // Update range data after build
-  useEffect(() => {
-    props.tileData.aoes.set(
-      Views.Scarecrow,
-      allAoEs(scarecrows, props.tileData.coordinates, ScarecrowAoEFunction)
-    );
-    props.tileData.aoes.set(
-      Views.Sprinkler,
-      (allAoEs(sprinkler1s, props.tileData.coordinates, Sprinkler1AoEFunction)
-      || allAoEs(sprinkler2s, props.tileData.coordinates, Sprinkler2AoEFunction)
-      || allAoEs(sprinkler3s, props.tileData.coordinates, Sprinkler3AoEFunction)
-      || allAoEs(sprinkler4s, props.tileData.coordinates, Sprinkler4AoEFunction))
-    );
+  // Update range data when Sets change - use useLayoutEffect for immediate update
+  useLayoutEffect(() => {
+    updateTileAoe(props.tileData);
   }, [
     scarecrows,
     sprinkler1s,
     sprinkler2s,
     sprinkler3s,
     sprinkler4s,
-    props.tileData.aoes,
-    props.tileData.coordinates
+    props.tileData,
+    updateTileAoe
   ]);
 
   return (
@@ -208,23 +223,23 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         }}
       >
         {
-          (scarecrows.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Scarecrow))
+          (props.tileData.building?.name === Structs.Scarecrow || (originTile === props.tileData && currentStruct?.name === Structs.Scarecrow))
           && < Scarecrow onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
         }
         {
-          (sprinkler1s.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler1))
+          (props.tileData.building?.name === Structs.Sprinkler1 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler1))
           && < Sprinkler1 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
         }
         {
-          (sprinkler2s.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler2))
+          (props.tileData.building?.name === Structs.Sprinkler2 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler2))
           && < Sprinkler2 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
         }
         {
-          (sprinkler3s.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler3))
+          (props.tileData.building?.name === Structs.Sprinkler3 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler3))
           && < Sprinkler3 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
         }
         {
-          (sprinkler4s.has(props.tileData.coordinates) || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler4))
+          (props.tileData.building?.name === Structs.Sprinkler4 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler4))
           && < Sprinkler4 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
         }
       </div>
