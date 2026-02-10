@@ -13,6 +13,8 @@ interface MapState {
   setIsBuilding: (isBuilding: boolean) => void
   view: Views
   setView: (view: Views) => void
+  manualView: boolean
+  setManualView: (manual: boolean) => void
 }
 
 const useStore = create<MapState>((set) => ({
@@ -26,6 +28,8 @@ const useStore = create<MapState>((set) => ({
   setIsBuilding: (isBuilding) => set({ isBuilding: isBuilding }),
   view: Views.Sprinkler,
   setView: (view) => set({ view: view }),
+  manualView: false,
+  setManualView: (manual) => set({ manualView: manual }),
   scarecrows: new Set(),
 }))
 

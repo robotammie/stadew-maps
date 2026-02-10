@@ -30,6 +30,7 @@ const sprinkler1Sprite: React.JSX.Element =
 
 const Sprinkler1: FC<StructProps> = (props) => {
   const setView = useStore((state) => state.setView);
+  const manualView = useStore((state) => state.manualView);
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
@@ -49,11 +50,15 @@ const Sprinkler1: FC<StructProps> = (props) => {
           raze: removeSprinkler1,
           aoeFunction: AoEFunction,
         });
-        setView(Views.Sprinkler);
+        if (!manualView) {
+          setView(Views.Sprinkler);
+        }
       }}
       onDragEnd={(e) => {
         setIsBuilding(true);
-        setView(Views.Sprinkler);
+        if (!manualView) {
+          setView(Views.Sprinkler);
+        }
         clearOriginTile();
       }}
     >

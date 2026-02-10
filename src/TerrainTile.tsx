@@ -106,6 +106,7 @@ function allAoEs(
 const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const view = useStore((state) => state.view);
   const setView = useStore((state) => state.setView);
+  const manualView = useStore((state) => state.manualView);
   const destinationTile = useStore((state) => state.destinationTile);
   const setDestinationTile = useStore((state) => state.setDestinationTile);
   const clearDestinationTile = useStore((state) => state.clearDestinationTile);
@@ -168,7 +169,9 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       setIsBuilding(false);
       clearOriginTile()
       clearDestinationTile();
-      setView(Views.Sprinkler);
+      if (!manualView) {
+        setView(Views.Sprinkler);
+      }
     }
   }, [
     isBuilding,
@@ -181,7 +184,8 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     clearDestinationTile,
     clearOriginTile,
     setView,
-    updateTileAoe
+    updateTileAoe,
+    manualView
   ]);
 
   // Update range data when Sets change - use useLayoutEffect for immediate update

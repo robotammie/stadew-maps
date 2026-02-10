@@ -5,7 +5,7 @@ import useStore from './store';
 import { Views } from './types.d';
 
 const buttonStyles = {
-  width: '50px',
+  width: '125px',
   margin: '0px 0px 10px 20px',
   backgroundColor: '#ad723e',
   color: 'white',
@@ -15,19 +15,35 @@ const buttonStyles = {
 };
 
 const ViewSelector: React.FC  = () => {
+  const view = useStore((state) => state.view);
   const setView = useStore((state) => state.setView);
+  const setManualView = useStore((state) => state.setManualView);
+
+  const getViewName = (view: Views): string => {
+    switch (view) {
+      case Views.Sprinkler:
+        return 'View';
+      case Views.Scarecrow:
+        return 'Scarecrow';
+      case Views.Junimo:
+        return 'Junimo Hut';
+      default:
+        return 'View';
+    }
+  };
 
   return (
     <PopupState variant="popover" popupId="demo-popup-menu">
       {(popupState) => (
         <React.Fragment>
           <Button variant="contained" sx={buttonStyles} {...bindTrigger(popupState)}>
-            View
+            {getViewName(view)}
           </Button>
           <Menu {...bindMenu(popupState)}>
             <MenuItem
               onClick={() => {
                 setView(Views.Sprinkler);
+                setManualView(true);
                 popupState.close();
               }}
             >
@@ -36,6 +52,7 @@ const ViewSelector: React.FC  = () => {
             <MenuItem
               onClick={() => {
                 setView(Views.Scarecrow);
+                setManualView(true);
                 popupState.close();
               }}
             >
@@ -44,6 +61,7 @@ const ViewSelector: React.FC  = () => {
             <MenuItem
               onClick={() => {
                 setView(Views.Junimo);
+                setManualView(true);
                 popupState.close();
               }}
             >
