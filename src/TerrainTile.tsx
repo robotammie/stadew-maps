@@ -108,9 +108,9 @@ function tileStyles(
   return{
     margin: 0,
     padding: 0,
-    width: '20px',
-    height: '20px',
-    border: '1px solid black',
+    width:  '10px',
+    height: '10px',
+    border: '.5px solid black',
     backgroundColor: pickColor(view, currentStruct, tileData, junimoHuts, destination),
   }
 };

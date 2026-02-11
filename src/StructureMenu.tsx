@@ -10,7 +10,8 @@ import JunimoHut from "./Structures/JunimoHut";
 const spriteStyles = {
   margin: 0,
   padding: '5px 10px',
-  width: 'full',
+  width: '15 px',
+  height: '15 px',
   display: 'flex',
 };
 

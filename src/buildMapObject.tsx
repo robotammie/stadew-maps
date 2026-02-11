@@ -1,5 +1,5 @@
 import {Dirt, Marsh, Grass, Brush, Water, Farmhouse} from './constants';
-import TestMap from './maps/TestMap.txt';
+import StandardMap from './maps/Standard.txt';
 import { Terrain, Tile, Views } from './types';
 
 const buildTerrain = (cell: string) => {
@@ -20,7 +20,7 @@ const buildTerrain = (cell: string) => {
 }
 
 const buildMapObject = () => {
-  const map = TestMap as string
+  const map = StandardMap as string
   const rows = map.split('\n');
   const mapObject = rows.map((row, i) => {
     return row.split(' ').map((cell, j) => {

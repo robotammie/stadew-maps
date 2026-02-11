@@ -26,8 +26,15 @@ const junimoHutSprite: React.JSX.Element =
   <img
     src={JunimoHutSvg}
     alt={Structs.JunimoHut}
-    height="100%"
     draggable={false}
+    style={{
+      width: '100%',
+      height: '100%',
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain',
+      display: 'block'
+    }}
   />
 
 const JunimoHut: FC<StructProps> = (props) => {

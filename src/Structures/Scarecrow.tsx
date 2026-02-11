@@ -22,8 +22,15 @@ const scarecrowSprite: React.JSX.Element =
   <img
     src={ScarecrowSvg}
     alt={Structs.Scarecrow}
-    height="100%"
     draggable={false}
+    style={{
+      width: '100%',
+      height: '100%',
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain',
+      display: 'block'
+    }}
   />
 
 const Scarecrow: FC<StructProps> = (props) => {

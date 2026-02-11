@@ -19,8 +19,15 @@ const sprinkler2Sprite: React.JSX.Element =
   <img
     src={Sprinkler2Svg}
     alt={Structs.Sprinkler2}
-    height="100%"
     draggable={false}
+    style={{
+      width: '100%',
+      height: '100%',
+      maxWidth: '100%',
+      maxHeight: '100%',
+      objectFit: 'contain',
+      display: 'block'
+    }}
   />
 
 const Sprinkler2: FC<StructProps> = (props) => {
