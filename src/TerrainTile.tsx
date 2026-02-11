@@ -4,12 +4,7 @@ import { FieldColor, FieldColorHalo, DirtColorHalo, FootprintColor } from './con
 import useStore from './store';
 import useStructStore from './structStore';
 import { Building, Structs, Tile, Views } from './types.d';
-import Scarecrow, {AoEFunction as ScarecrowAoEFunction} from './Structures/Scarecrow';
-import Sprinkler1, {AoEFunction as Sprinkler1AoEFunction} from './Structures/Sprinkler1';
-import Sprinkler2, {AoEFunction as Sprinkler2AoEFunction} from './Structures/Sprinkler2';
-import Sprinkler3, {AoEFunction as Sprinkler3AoEFunction} from './Structures/Sprinkler3';
-import Sprinkler4, {AoEFunction as Sprinkler4AoEFunction} from './Structures/Sprinkler4';
-import JunimoHut, {AoEFunction as JunimoHutAoEFunction, FootprintFunction as JunimoHutFootprintFunction} from './Structures/JunimoHut';
+import { structRegistry } from './structRegistry';
 
 type TerrainTileProps = {
   tileData: Tile;
@@ -31,7 +26,9 @@ function pickColor(
   junimoHuts: Set<[number, number]>,
   destination?: [number, number],
 ): string {
-  if (allFootprints(junimoHuts, tileData.coordinates, JunimoHutFootprintFunction)) {
+  // Check footprints using the struct's footprintFunction if available
+  const junimoConfig = structRegistry[Structs.JunimoHut];
+  if (junimoConfig.footprintFunction && allFootprints(junimoHuts, tileData.coordinates, junimoConfig.footprintFunction)) {
     return FootprintColor;
   }
   if (!tileData.terrain.farmable) {
@@ -160,37 +157,46 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const setIsBuilding = useStore((state) => state.setIsBuilding);
 
   const currentStruct = useStructStore((state) => state.currentStruct);
-  const scarecrows = useStructStore((state) => state.scarecrows);
-  const sprinkler1s = useStructStore((state) => state.sprinkler1s);
-  const sprinkler2s = useStructStore((state) => state.sprinkler2s);
-  const sprinkler3s = useStructStore((state) => state.sprinkler3s);
-  const sprinkler4s = useStructStore((state) => state.sprinkler4s);
-  const junimoHuts = useStructStore((state) => state.junimoHuts);
+  const structStoreState = useStructStore();
 
   // State to force re-render when AOE updates
   const [, forceUpdate] = useState(0);
 
   // Helper function to update AOE for a tile and force re-render
   const updateTileAoe = useCallback((tile: Tile) => {
-    tile.aoes.set(
-      Views.Scarecrow,
-      allAoEs(scarecrows, tile.coordinates, ScarecrowAoEFunction)
-    );
-    tile.aoes.set(
-      Views.Sprinkler,
-      (allAoEs(sprinkler1s, tile.coordinates, Sprinkler1AoEFunction)
-      || allAoEs(sprinkler2s, tile.coordinates, Sprinkler2AoEFunction)
-      || allAoEs(sprinkler3s, tile.coordinates, Sprinkler3AoEFunction)
-      || allAoEs(sprinkler4s, tile.coordinates, Sprinkler4AoEFunction))
-    );
-    tile.aoes.set(
-      Views.Junimo,
-      allAoEs(junimoHuts, tile.coordinates, JunimoHutAoEFunction)
-      && !allFootprints(junimoHuts, tile.coordinates, JunimoHutFootprintFunction)
-    );
+    // Group structs by view and calculate AOE for each view
+    const viewResults = new Map<Views, boolean>();
+    
+    // Iterate over all struct types in the registry
+    for (const [structType, config] of Object.entries(structRegistry) as [Structs, typeof structRegistry[Structs]][]) {
+      const structSet = config.getSet(structStoreState);
+      const view = config.view;
+      
+      // For Sprinkler view, combine all sprinkler types with OR
+      if (view === Views.Sprinkler) {
+        const currentValue = viewResults.get(view) || false;
+        viewResults.set(view, currentValue || allAoEs(structSet, tile.coordinates, config.aoeFunction));
+      } else {
+        // For other views, set directly (they only have one struct type)
+        const result = allAoEs(structSet, tile.coordinates, config.aoeFunction);
+        
+        // Special handling for Junimo: also check footprints
+        if (structType === Structs.JunimoHut && config.footprintFunction) {
+          viewResults.set(view, result && !allFootprints(structSet, tile.coordinates, config.footprintFunction));
+        } else {
+          viewResults.set(view, result);
+        }
+      }
+    }
+    
+    // Update tile AOE map
+    for (const [view, result] of viewResults.entries()) {
+      tile.aoes.set(view, result);
+    }
+    
     // Force re-render by updating state
     forceUpdate(prev => prev + 1);
-  }, [scarecrows, sprinkler1s, sprinkler2s, sprinkler3s, sprinkler4s, junimoHuts]);
+  }, [structStoreState]);
 
   const razeBuilding = useCallback((tile: Tile) => {
     tile.building?.raze(tile.coordinates);
@@ -202,10 +208,15 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   // Build structure on change in isBuilding (DragEnd)
   useLayoutEffect(() => {
     if (isBuilding && props.tileData === destinationTile) {
+      const junimoConfig = structRegistry[Structs.JunimoHut];
+      const hasFootprint = junimoConfig.footprintFunction 
+        ? allFootprints(structStoreState.junimoHuts, props.tileData.coordinates, junimoConfig.footprintFunction)
+        : false;
+      
       if (props.tileData.terrain.buildable
         && !!currentStruct
         && !props.tileData.building
-        && !allFootprints(junimoHuts, props.tileData.coordinates, JunimoHutFootprintFunction)
+        && !hasFootprint
       ) {
           props.tileData.building = currentStruct;
           currentStruct.build(props.tileData.coordinates);
@@ -235,19 +246,19 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     setView,
     updateTileAoe,
     manualView,
-    junimoHuts
+    structStoreState
   ]);
 
   // Update range data when Sets change - use useLayoutEffect for immediate update
   useLayoutEffect(() => {
     updateTileAoe(props.tileData);
   }, [
-    scarecrows,
-    sprinkler1s,
-    sprinkler2s,
-    sprinkler3s,
-    sprinkler4s,
-    junimoHuts,
+    structStoreState.scarecrows,
+    structStoreState.sprinkler1s,
+    structStoreState.sprinkler2s,
+    structStoreState.sprinkler3s,
+    structStoreState.sprinkler4s,
+    structStoreState.junimoHuts,
     props.tileData,
     updateTileAoe
   ]);
@@ -255,7 +266,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   return (
     <Tooltip title={tooltipText(props.tileData)}>
       <div
-        style={tileStyles(view, currentStruct, props.tileData, junimoHuts, destinationTile?.coordinates)}
+        style={tileStyles(view, currentStruct, props.tileData, structStoreState.junimoHuts, destinationTile?.coordinates)}
         onMouseDown={(_) => {
           setOriginTile(props.tileData);
           setCurrentStruct(props.tileData.building);
@@ -265,7 +276,11 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
           e.preventDefault()
           setDestinationTile(props.tileData);
           let target = e.target as HTMLElement;
-          if (allFootprints(junimoHuts, props.tileData.coordinates, JunimoHutFootprintFunction)) {
+          const junimoConfig = structRegistry[Structs.JunimoHut];
+          const hasFootprint = junimoConfig.footprintFunction 
+            ? allFootprints(structStoreState.junimoHuts, props.tileData.coordinates, junimoConfig.footprintFunction)
+            : false;
+          if (hasFootprint) {
             target.style.backgroundColor = '#de2c1f';
           } else if (props.tileData.terrain.buildable && !props.tileData.building) {
             target.style.backgroundColor = '#abfa7d';
@@ -276,46 +291,46 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         onDragLeave={(e) => {
           // e.preventDefault()
           let target = e.target as HTMLElement;
-          target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, junimoHuts, destinationTile?.coordinates);
+          target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, structStoreState.junimoHuts, destinationTile?.coordinates);
         }}
         onDrop={(e) => {
           e.preventDefault();
           let target = e.target as HTMLElement;
+          const junimoConfig = structRegistry[Structs.JunimoHut];
+          const hasFootprint = junimoConfig.footprintFunction 
+            ? allFootprints(structStoreState.junimoHuts, props.tileData.coordinates, junimoConfig.footprintFunction)
+            : false;
           // Check if building can be built using the same validation logic as useLayoutEffect
           const canBuild = props.tileData.terrain.buildable
             && !!currentStruct
             && !props.tileData.building
-            && !allFootprints(junimoHuts, props.tileData.coordinates, JunimoHutFootprintFunction);
+            && !hasFootprint;
           
           // If building cannot be built, revert the tile color
           if (!canBuild) {
-            target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, junimoHuts, destinationTile?.coordinates);
+            target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, structStoreState.junimoHuts, destinationTile?.coordinates);
           }
         }}
       >
         {
-          (props.tileData.building?.name === Structs.Scarecrow || (originTile === props.tileData && currentStruct?.name === Structs.Scarecrow))
-          && < Scarecrow onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
-        }
-        {
-          (props.tileData.building?.name === Structs.Sprinkler1 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler1))
-          && < Sprinkler1 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
-        }
-        {
-          (props.tileData.building?.name === Structs.Sprinkler2 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler2))
-          && < Sprinkler2 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
-        }
-        {
-          (props.tileData.building?.name === Structs.Sprinkler3 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler3))
-          && < Sprinkler3 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
-        }
-        {
-          (props.tileData.building?.name === Structs.Sprinkler4 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler4))
-          && < Sprinkler4 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
-        }
-        {
-          (props.tileData.building?.name === Structs.JunimoHut || (originTile === props.tileData && currentStruct?.name === Structs.JunimoHut))
-          && < JunimoHut onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
+          // Render struct components based on registry
+          Object.entries(structRegistry).map(([structType, config]) => {
+            const structName = structType as Structs;
+            const shouldRender = props.tileData.building?.name === structName 
+              || (originTile === props.tileData && currentStruct?.name === structName);
+            
+            if (shouldRender) {
+              const Component = config.component;
+              return (
+                <Component 
+                  key={structName}
+                  onMap={true} 
+                  bgColor={pickColor(view, currentStruct, props.tileData, structStoreState.junimoHuts)} 
+                />
+              );
+            }
+            return null;
+          })
         }
       </div>
     </Tooltip>

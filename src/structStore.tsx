@@ -2,7 +2,7 @@ import create from 'zustand'
 
 import { Building } from './types.d'
 
-interface MapState {
+export interface MapState {
   currentStruct: Building | undefined
   setCurrentStruct: (element: Building | undefined) => void
   scarecrows: Set<[number, number]>
