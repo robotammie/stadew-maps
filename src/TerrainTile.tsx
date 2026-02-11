@@ -31,9 +31,11 @@ function pickColor(
   junimoHuts: Set<[number, number]>,
   destination?: [number, number],
 ): string {
-  // Check if tile is within JunimoHut footprint - if so, return gray
   if (allFootprints(junimoHuts, tileData.coordinates, JunimoHutFootprintFunction)) {
     return FootprintColor;
+  }
+  if (!tileData.terrain.farmable) {
+    return tileData.terrain.color;
   }
 
   let fillColor
