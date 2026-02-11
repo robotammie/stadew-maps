@@ -2,6 +2,7 @@
 export const FieldColor = '#8c5703'
 export const FieldColorHalo = '#8c7703'
 export const DirtColorHalo = '#cfa004'
+export const FootprintColor = '#6E6E6E'
 
 
 // Terrain Types
@@ -44,5 +45,5 @@ export const Farmhouse = {
   name: 'Farmhouse',
   buildable: false,
   farmable: false,
-  color: '#6E6E6E',
+  color: FootprintColor,
 }

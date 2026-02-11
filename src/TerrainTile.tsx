@@ -1,6 +1,6 @@
 import React,  { useLayoutEffect, useCallback, useState }  from 'react';
 import { Tooltip } from '@mui/material';
-import { FieldColor, FieldColorHalo, DirtColorHalo } from './constants';
+import { FieldColor, FieldColorHalo, DirtColorHalo, FootprintColor } from './constants';
 import useStore from './store';
 import useStructStore from './structStore';
 import { Building, Structs, Tile, Views } from './types.d';
@@ -28,8 +28,14 @@ function pickColor(
   view: Views,
   struct: Building | undefined,
   tileData: Tile,
+  junimoHuts: Set<[number, number]>,
   destination?: [number, number],
 ): string {
+  // Check if tile is within JunimoHut footprint - if so, return gray
+  if (allFootprints(junimoHuts, tileData.coordinates, JunimoHutFootprintFunction)) {
+    return FootprintColor;
+  }
+
   let fillColor
   switch (view) {
     case Views.Sprinkler:
@@ -94,6 +100,7 @@ function tileStyles(
   currentStruct:
   Building | undefined,
   tileData: Tile,
+  junimoHuts: Set<[number, number]>,
   destination?: [number, number],
 ): any {
   return{
@@ -102,7 +109,7 @@ function tileStyles(
     width: '20px',
     height: '20px',
     border: '1px solid black',
-    backgroundColor: pickColor(view, currentStruct, tileData, destination),
+    backgroundColor: pickColor(view, currentStruct, tileData, junimoHuts, destination),
   }
 };
 
@@ -196,6 +203,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       if (props.tileData.terrain.buildable
         && !!currentStruct
         && !props.tileData.building
+        && !allFootprints(junimoHuts, props.tileData.coordinates, JunimoHutFootprintFunction)
       ) {
           props.tileData.building = currentStruct;
           currentStruct.build(props.tileData.coordinates);
@@ -224,7 +232,8 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     clearOriginTile,
     setView,
     updateTileAoe,
-    manualView
+    manualView,
+    junimoHuts
   ]);
 
   // Update range data when Sets change - use useLayoutEffect for immediate update
@@ -244,7 +253,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   return (
     <Tooltip title={tooltipText(props.tileData)}>
       <div
-        style={tileStyles(view, currentStruct, props.tileData, destinationTile?.coordinates)}
+        style={tileStyles(view, currentStruct, props.tileData, junimoHuts, destinationTile?.coordinates)}
         onMouseDown={(_) => {
           setOriginTile(props.tileData);
           setCurrentStruct(props.tileData.building);
@@ -254,7 +263,9 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
           e.preventDefault()
           setDestinationTile(props.tileData);
           let target = e.target as HTMLElement;
-          if (props.tileData.terrain.buildable && !props.tileData.building) {
+          if (allFootprints(junimoHuts, props.tileData.coordinates, JunimoHutFootprintFunction)) {
+            target.style.backgroundColor = '#de2c1f';
+          } else if (props.tileData.terrain.buildable && !props.tileData.building) {
             target.style.backgroundColor = '#abfa7d';
           } else {
            target.style.backgroundColor = '#de2c1f';
@@ -263,32 +274,46 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         onDragLeave={(e) => {
           // e.preventDefault()
           let target = e.target as HTMLElement;
-          target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, destinationTile?.coordinates);
+          target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, junimoHuts, destinationTile?.coordinates);
+        }}
+        onDrop={(e) => {
+          e.preventDefault();
+          let target = e.target as HTMLElement;
+          // Check if building can be built using the same validation logic as useLayoutEffect
+          const canBuild = props.tileData.terrain.buildable
+            && !!currentStruct
+            && !props.tileData.building
+            && !allFootprints(junimoHuts, props.tileData.coordinates, JunimoHutFootprintFunction);
+          
+          // If building cannot be built, revert the tile color
+          if (!canBuild) {
+            target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, junimoHuts, destinationTile?.coordinates);
+          }
         }}
       >
         {
           (props.tileData.building?.name === Structs.Scarecrow || (originTile === props.tileData && currentStruct?.name === Structs.Scarecrow))
-          && < Scarecrow onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
+          && < Scarecrow onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
         }
         {
           (props.tileData.building?.name === Structs.Sprinkler1 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler1))
-          && < Sprinkler1 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
+          && < Sprinkler1 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
         }
         {
           (props.tileData.building?.name === Structs.Sprinkler2 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler2))
-          && < Sprinkler2 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
+          && < Sprinkler2 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
         }
         {
           (props.tileData.building?.name === Structs.Sprinkler3 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler3))
-          && < Sprinkler3 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
+          && < Sprinkler3 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
         }
         {
           (props.tileData.building?.name === Structs.Sprinkler4 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler4))
-          && < Sprinkler4 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
+          && < Sprinkler4 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
         }
         {
           (props.tileData.building?.name === Structs.JunimoHut || (originTile === props.tileData && currentStruct?.name === Structs.JunimoHut))
-          && < JunimoHut onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
+          && < JunimoHut onMap={true} bgColor={pickColor(view, currentStruct, props.tileData, junimoHuts)} />
         }
       </div>
     </Tooltip>
