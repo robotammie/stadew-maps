@@ -9,6 +9,7 @@ import Sprinkler1, {AoEFunction as Sprinkler1AoEFunction} from './Structures/Spr
 import Sprinkler2, {AoEFunction as Sprinkler2AoEFunction} from './Structures/Sprinkler2';
 import Sprinkler3, {AoEFunction as Sprinkler3AoEFunction} from './Structures/Sprinkler3';
 import Sprinkler4, {AoEFunction as Sprinkler4AoEFunction} from './Structures/Sprinkler4';
+import JunimoHut, {AoEFunction as JunimoHutAoEFunction, FootprintFunction as JunimoHutFootprintFunction} from './Structures/JunimoHut';
 
 type TerrainTileProps = {
   tileData: Tile;
@@ -44,6 +45,25 @@ function pickColor(
       if (!tileData.terrain.farmable) {
         fillColor = tileData.terrain.color;
       } else if (tileData.aoes.get(Views.Scarecrow) || (destination && struct?.aoeFunction(destination, tileData.coordinates))) {
+        if (isIrrigated(tileData)){
+          fillColor = FieldColorHalo;
+        }
+        else {
+          fillColor = DirtColorHalo;
+        }
+      } else {
+        if (isIrrigated(tileData)){
+          fillColor = FieldColor;
+        }
+        else {
+          fillColor = tileData.terrain.color
+        }
+      }
+      break;
+    case Views.Junimo:
+      if (!tileData.terrain.farmable) {
+        fillColor = tileData.terrain.color;
+      } else if (tileData.aoes.get(Views.Junimo) || (destination && struct?.aoeFunction(destination, tileData.coordinates))) {
         if (isIrrigated(tileData)){
           fillColor = FieldColorHalo;
         }
@@ -103,6 +123,19 @@ function allAoEs(
   return false;
 }
 
+function allFootprints(
+  structs: Set<[number, number]>,
+  tile: [number, number],
+  FootprintFunction: (struct: [number, number], tile: [number, number]) => boolean
+): boolean {
+  for (const struct of structs) {
+    if (FootprintFunction(struct, tile)) {
+      return true;
+    }
+  };
+  return false;
+}
+
 const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const view = useStore((state) => state.view);
   const setView = useStore((state) => state.setView);
@@ -123,6 +156,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const sprinkler2s = useStructStore((state) => state.sprinkler2s);
   const sprinkler3s = useStructStore((state) => state.sprinkler3s);
   const sprinkler4s = useStructStore((state) => state.sprinkler4s);
+  const junimoHuts = useStructStore((state) => state.junimoHuts);
 
   // State to force re-render when AOE updates
   const [, forceUpdate] = useState(0);
@@ -140,9 +174,14 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       || allAoEs(sprinkler3s, tile.coordinates, Sprinkler3AoEFunction)
       || allAoEs(sprinkler4s, tile.coordinates, Sprinkler4AoEFunction))
     );
+    tile.aoes.set(
+      Views.Junimo,
+      allAoEs(junimoHuts, tile.coordinates, JunimoHutAoEFunction)
+      && !allFootprints(junimoHuts, tile.coordinates, JunimoHutFootprintFunction)
+    );
     // Force re-render by updating state
     forceUpdate(prev => prev + 1);
-  }, [scarecrows, sprinkler1s, sprinkler2s, sprinkler3s, sprinkler4s]);
+  }, [scarecrows, sprinkler1s, sprinkler2s, sprinkler3s, sprinkler4s, junimoHuts]);
 
   const razeBuilding = useCallback((tile: Tile) => {
     tile.building?.raze(tile.coordinates);
@@ -197,6 +236,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     sprinkler2s,
     sprinkler3s,
     sprinkler4s,
+    junimoHuts,
     props.tileData,
     updateTileAoe
   ]);
@@ -245,6 +285,10 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         {
           (props.tileData.building?.name === Structs.Sprinkler4 || (originTile === props.tileData && currentStruct?.name === Structs.Sprinkler4))
           && < Sprinkler4 onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
+        }
+        {
+          (props.tileData.building?.name === Structs.JunimoHut || (originTile === props.tileData && currentStruct?.name === Structs.JunimoHut))
+          && < JunimoHut onMap={true} bgColor={pickColor(view, currentStruct, props.tileData)} />
         }
       </div>
     </Tooltip>

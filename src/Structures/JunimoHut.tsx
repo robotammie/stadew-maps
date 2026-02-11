@@ -12,7 +12,14 @@ export function AoEFunction(
   struct: [number, number],
   tile: [number, number]
 ): boolean {
-  return Math.abs(tile[0] - struct[0]) <= 8 && Math.abs(tile[1] - struct[1]) <= 8
+  return Math.abs(tile[0] - struct[0]) <= 8 && Math.abs(tile[1] - struct[1]) <= 8 && !FootprintFunction(struct, tile);
+}
+
+export function FootprintFunction(
+  struct: [number, number],
+  tile: [number, number]
+): boolean {
+  return Math.abs(tile[0] - struct[0]) <= 1 && tile[1] - struct[1] <= 0 && tile[1] - struct[1] >= -1;
 }
 
 const junimoHutSprite: React.JSX.Element =
@@ -44,6 +51,7 @@ const JunimoHut: FC<StructProps> = (props) => {
           build: addJunimoHut,
           raze: removeJunimoHut,
           aoeFunction: AoEFunction,
+          footprintFunction: FootprintFunction,
         });
         if (!manualView) {
           setView(Views.Junimo);

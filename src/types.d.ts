@@ -26,6 +26,7 @@ export type Building = {
   build: (coordinates: [number, number]) => void;
   raze: (coordinates: [number, number]) => void;
   aoeFunction: (struct: [number, number], tile: [number, number]) => boolean;
+  footprintFunction?: (struct: [number, number], tile: [number, number]) => boolean;
 }
 
 export type Terrain = {

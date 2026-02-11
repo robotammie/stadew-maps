@@ -31,6 +31,7 @@ const useStore = create<MapState>((set) => ({
   manualView: false,
   setManualView: (manual) => set({ manualView: manual }),
   scarecrows: new Set(),
+  junimoHuts: new Set(),
 }))
 
 export default useStore;
