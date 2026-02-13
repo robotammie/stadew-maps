@@ -39,8 +39,8 @@ const Scarecrow: FC<StructProps> = (props) => {
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
-  const addScarecrow = useStructStore((state) => state.addScarecrow);
-  const removeScarecrow = useStructStore((state) => state.removeScarecrow);
+  const addStruct = useStructStore((state) => state.addStruct);
+  const removeStruct = useStructStore((state) => state.removeStruct);
 
   return (
     <div
@@ -51,8 +51,8 @@ const Scarecrow: FC<StructProps> = (props) => {
         setCurrentStruct({
           name: Structs.Scarecrow,
           sprite: Scarecrow,
-          build: addScarecrow,
-          raze: removeScarecrow,
+          build: (coordinates: [number, number]) => addStruct(Structs.Scarecrow, coordinates),
+          raze: (coordinates: [number, number]) => removeStruct(Structs.Scarecrow, coordinates),
           aoeFunction: AoEFunction,
         });
         if (!manualView) {

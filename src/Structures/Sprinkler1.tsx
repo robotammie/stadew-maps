@@ -41,8 +41,8 @@ const Sprinkler1: FC<StructProps> = (props) => {
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
-  const addSprinkler1 = useStructStore((state) => state.addSprinkler1);
-  const removeSprinkler1 = useStructStore((state) => state.removeSprinkler1);
+  const addStruct = useStructStore((state) => state.addStruct);
+  const removeStruct = useStructStore((state) => state.removeStruct);
 
   return (
     <div
@@ -53,8 +53,8 @@ const Sprinkler1: FC<StructProps> = (props) => {
         setCurrentStruct({
           name: Structs.Sprinkler1,
           sprite: Sprinkler1,
-          build: addSprinkler1,
-          raze: removeSprinkler1,
+          build: (coordinates: [number, number]) => addStruct(Structs.Sprinkler1, coordinates),
+          raze: (coordinates: [number, number]) => removeStruct(Structs.Sprinkler1, coordinates),
           aoeFunction: AoEFunction,
         });
         if (!manualView) {

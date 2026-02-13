@@ -1,4 +1,4 @@
-import React,  { useLayoutEffect, useCallback, useState }  from 'react';
+import React,  { useLayoutEffect, useCallback, useState, useMemo, useRef }  from 'react';
 import { Tooltip } from '@mui/material';
 import { FieldColor, FieldColorHalo, DirtColorHalo, FootprintColor } from './constants';
 import useStore from './store';
@@ -95,12 +95,7 @@ function pickColor(
 }
 
 function tileStyles(
-  view: Views,
-  currentStruct:
-  Building | undefined,
-  tileData: Tile,
-  junimoHuts: Set<[number, number]>,
-  destination?: [number, number],
+  backgroundColor: string,
 ): any {
   return{
     margin: 0,
@@ -108,7 +103,7 @@ function tileStyles(
     width:  '10px',
     height: '10px',
     border: '.5px solid black',
-    backgroundColor: pickColor(view, currentStruct, tileData, junimoHuts, destination),
+    backgroundColor,
   }
 };
 
@@ -157,21 +152,44 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   const setIsBuilding = useStore((state) => state.setIsBuilding);
 
   const currentStruct = useStructStore((state) => state.currentStruct);
-  const structStoreState = useStructStore();
 
-  // State to force re-render when AOE updates
-  const [, forceUpdate] = useState(0);
+  // Selective subscriptions to individual struct sets (avoids re-renders when unrelated sets change)
+  const structCoordinates = useStructStore((state) => state.structs);
+
+  // Ref to track previous destination tile to avoid unnecessary updates
+  const prevDestinationTileRef = useRef<Tile | undefined>(undefined);
+  const dragOverAnimationFrameRef = useRef<number | null>(null);
+
+  // State to force re-render when AOE updates or building changes
+  const [renderKey, setRenderKey] = useState(0);
+
+  // Create a struct state object for use in callbacks - use the store's getState to get full state
+  const getStructState = useCallback(() => {
+    return useStructStore.getState();
+  }, []);
+
+  // Track building reference to detect changes
+  const buildingRef = useRef(props.tileData.building);
+
+  // Force re-render when building changes (even if tileData reference stays same)
+  useLayoutEffect(() => {
+    if (buildingRef.current !== props.tileData.building) {
+      buildingRef.current = props.tileData.building;
+      setRenderKey(prev => prev + 1);
+    }
+  }, [props.tileData.building]);
 
   // Helper function to update AOE for a tile and force re-render
   const updateTileAoe = useCallback((tile: Tile) => {
     // Group structs by view and calculate AOE for each view
     const viewResults = new Map<Views, boolean>();
-    
+    const structState = getStructState();
+
     // Iterate over all struct types in the registry
     for (const [structType, config] of Object.entries(structRegistry) as [Structs, typeof structRegistry[Structs]][]) {
-      const structSet = config.getSet(structStoreState);
+      const structSet = config.getSet(structState);
       const view = config.view;
-      
+
       // For Sprinkler view, combine all sprinkler types with OR
       if (view === Views.Sprinkler) {
         const currentValue = viewResults.get(view) || false;
@@ -179,7 +197,7 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       } else {
         // For other views, set directly (they only have one struct type)
         const result = allAoEs(structSet, tile.coordinates, config.aoeFunction);
-        
+
         // Special handling for Junimo: also check footprints
         if (structType === Structs.JunimoHut && config.footprintFunction) {
           viewResults.set(view, result && !allFootprints(structSet, tile.coordinates, config.footprintFunction));
@@ -188,15 +206,15 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
         }
       }
     }
-    
+
     // Update tile AOE map
     for (const [view, result] of viewResults.entries()) {
       tile.aoes.set(view, result);
     }
-    
+
     // Force re-render by updating state
-    forceUpdate(prev => prev + 1);
-  }, [structStoreState]);
+    setRenderKey(prev => prev + 1);
+  }, [getStructState]);
 
   const razeBuilding = useCallback((tile: Tile) => {
     tile.building?.raze(tile.coordinates);
@@ -209,10 +227,10 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
   useLayoutEffect(() => {
     if (isBuilding && props.tileData === destinationTile) {
       const junimoConfig = structRegistry[Structs.JunimoHut];
-      const hasFootprint = junimoConfig.footprintFunction 
-        ? allFootprints(structStoreState.junimoHuts, props.tileData.coordinates, junimoConfig.footprintFunction)
+      const hasFootprint = junimoConfig.footprintFunction
+        ? allFootprints(structCoordinates[Structs.JunimoHut], props.tileData.coordinates, junimoConfig.footprintFunction)
         : false;
-      
+
       if (props.tileData.terrain.buildable
         && !!currentStruct
         && !props.tileData.building
@@ -220,6 +238,8 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
       ) {
           props.tileData.building = currentStruct;
           currentStruct.build(props.tileData.coordinates);
+          // Force immediate re-render to show building sprite
+          setRenderKey(prev => prev + 1);
           // Update AOE immediately after build
           updateTileAoe(props.tileData);
       }
@@ -246,95 +266,146 @@ const TerrainTile: React.FC<TerrainTileProps>  = (props) => {
     setView,
     updateTileAoe,
     manualView,
-    structStoreState
+    structCoordinates
   ]);
 
   // Update range data when Sets change - use useLayoutEffect for immediate update
   useLayoutEffect(() => {
     updateTileAoe(props.tileData);
   }, [
-    structStoreState.scarecrows,
-    structStoreState.sprinkler1s,
-    structStoreState.sprinkler2s,
-    structStoreState.sprinkler3s,
-    structStoreState.sprinkler4s,
-    structStoreState.junimoHuts,
+    structCoordinates,
     props.tileData,
     updateTileAoe
   ]);
 
+  // Memoize pickColor result to avoid recalculating on every render
+  // Include renderKey to ensure recalculation when AOE changes (renderKey increments when AOE updates)
+  const tileColor = useMemo(() => {
+    return pickColor(view, currentStruct, props.tileData, structCoordinates[Structs.JunimoHut], destinationTile?.coordinates);
+    // renderKey is intentionally included to force recalculation when AOE changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [view, currentStruct, props.tileData, structCoordinates[Structs.JunimoHut], destinationTile?.coordinates, renderKey]);
+
+  // Memoize footprint check for drag operations
+  const junimoConfig = structRegistry[Structs.JunimoHut];
+  const hasFootprint = useMemo(() => {
+    return junimoConfig.footprintFunction
+      ? allFootprints(structCoordinates[Structs.JunimoHut], props.tileData.coordinates, junimoConfig.footprintFunction)
+      : false;
+  }, [structCoordinates, props.tileData.coordinates, junimoConfig.footprintFunction]);
+
+  // Optimized onDragOver handler with throttling and tile change check
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+
+    // Only update destinationTile if it actually changed
+    if (prevDestinationTileRef.current !== props.tileData) {
+      // Cancel any pending animation frame
+      if (dragOverAnimationFrameRef.current !== null) {
+        cancelAnimationFrame(dragOverAnimationFrameRef.current);
+      }
+
+      // Throttle updates using requestAnimationFrame
+      dragOverAnimationFrameRef.current = requestAnimationFrame(() => {
+        setDestinationTile(props.tileData);
+        prevDestinationTileRef.current = props.tileData;
+        dragOverAnimationFrameRef.current = null;
+      });
+    }
+
+    // Direct DOM manipulation for immediate visual feedback (outside React render cycle)
+    const target = e.currentTarget;
+    if (hasFootprint) {
+      target.style.backgroundColor = '#de2c1f';
+    } else if (props.tileData.terrain.buildable && !props.tileData.building) {
+      target.style.backgroundColor = '#abfa7d';
+    } else {
+      target.style.backgroundColor = '#de2c1f';
+    }
+  }, [props.tileData, hasFootprint, setDestinationTile]);
+
+  // Optimized onDragLeave handler
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    const target = e.currentTarget;
+    target.style.backgroundColor = tileColor;
+  }, [tileColor]);
+
+  // Optimized onDrop handler
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    const target = e.currentTarget;
+
+    // Check if building can be built using the same validation logic as useLayoutEffect
+    const canBuild = props.tileData.terrain.buildable
+      && !!currentStruct
+      && !props.tileData.building
+      && !hasFootprint;
+
+    // If building cannot be built, revert the tile color
+    if (!canBuild) {
+      target.style.backgroundColor = tileColor;
+    }
+  }, [props.tileData, currentStruct, hasFootprint, tileColor]);
+
+  // Memoize struct component rendering - filter before mapping
+  // Include renderKey to force update when building changes (renderKey increments when building is set)
+  const structComponents = useMemo(() => {
+    const components: React.ReactNode[] = [];
+    const buildingName = props.tileData.building?.name;
+    const currentStructName = currentStruct?.name;
+    const isOriginTile = originTile === props.tileData;
+
+    for (const [structType, config] of Object.entries(structRegistry) as [Structs, typeof structRegistry[Structs]][]) {
+      const structName = structType as Structs;
+      const shouldRender = buildingName === structName
+        || (isOriginTile && currentStructName === structName);
+
+      if (shouldRender) {
+        const Component = config.component;
+        const bgColor = pickColor(view, currentStruct, props.tileData, structCoordinates[Structs.JunimoHut]);
+        components.push(
+          <Component
+            key={structName}
+            onMap={true}
+            bgColor={bgColor}
+          />
+        );
+      }
+    }
+    return components;
+    // renderKey is included to force recalculation when building changes
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [props.tileData, originTile, currentStruct, view, structCoordinates, renderKey]);
+
   return (
     <Tooltip title={tooltipText(props.tileData)}>
       <div
-        style={tileStyles(view, currentStruct, props.tileData, structStoreState.junimoHuts, destinationTile?.coordinates)}
+        style={tileStyles(tileColor)}
         onMouseDown={(_) => {
           setOriginTile(props.tileData);
           setCurrentStruct(props.tileData.building);
           razeBuilding(props.tileData);
         }}
-        onDragOver={(e) => {
-          e.preventDefault()
-          setDestinationTile(props.tileData);
-          let target = e.target as HTMLElement;
-          const junimoConfig = structRegistry[Structs.JunimoHut];
-          const hasFootprint = junimoConfig.footprintFunction 
-            ? allFootprints(structStoreState.junimoHuts, props.tileData.coordinates, junimoConfig.footprintFunction)
-            : false;
-          if (hasFootprint) {
-            target.style.backgroundColor = '#de2c1f';
-          } else if (props.tileData.terrain.buildable && !props.tileData.building) {
-            target.style.backgroundColor = '#abfa7d';
-          } else {
-           target.style.backgroundColor = '#de2c1f';
-          }
-        }}
-        onDragLeave={(e) => {
-          // e.preventDefault()
-          let target = e.target as HTMLElement;
-          target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, structStoreState.junimoHuts, destinationTile?.coordinates);
-        }}
-        onDrop={(e) => {
-          e.preventDefault();
-          let target = e.target as HTMLElement;
-          const junimoConfig = structRegistry[Structs.JunimoHut];
-          const hasFootprint = junimoConfig.footprintFunction 
-            ? allFootprints(structStoreState.junimoHuts, props.tileData.coordinates, junimoConfig.footprintFunction)
-            : false;
-          // Check if building can be built using the same validation logic as useLayoutEffect
-          const canBuild = props.tileData.terrain.buildable
-            && !!currentStruct
-            && !props.tileData.building
-            && !hasFootprint;
-          
-          // If building cannot be built, revert the tile color
-          if (!canBuild) {
-            target.style.backgroundColor = pickColor(view, currentStruct, props.tileData, structStoreState.junimoHuts, destinationTile?.coordinates);
-          }
-        }}
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
       >
-        {
-          // Render struct components based on registry
-          Object.entries(structRegistry).map(([structType, config]) => {
-            const structName = structType as Structs;
-            const shouldRender = props.tileData.building?.name === structName 
-              || (originTile === props.tileData && currentStruct?.name === structName);
-            
-            if (shouldRender) {
-              const Component = config.component;
-              return (
-                <Component 
-                  key={structName}
-                  onMap={true} 
-                  bgColor={pickColor(view, currentStruct, props.tileData, structStoreState.junimoHuts)} 
-                />
-              );
-            }
-            return null;
-          })
-        }
+        {structComponents}
       </div>
     </Tooltip>
   );
 }
 
-export default TerrainTile;
+// Memoize component to prevent unnecessary re-renders
+// Only re-render if tileData changes or if store values that affect this tile change
+const MemoizedTerrainTile = React.memo(TerrainTile, (prevProps, nextProps) => {
+  // Check tileData reference and building reference
+  // Building can be mutated without changing tileData reference
+  const tileDataSame = prevProps.tileData === nextProps.tileData;
+  const buildingSame = prevProps.tileData.building === nextProps.tileData.building;
+
+  // Skip re-render only if both tileData and building are the same
+  return tileDataSame && buildingSame;
+});
+
+export default MemoizedTerrainTile;

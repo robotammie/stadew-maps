@@ -43,8 +43,8 @@ const JunimoHut: FC<StructProps> = (props) => {
   const clearOriginTile = useStore((state) => state.clearOriginTile);
   const setIsBuilding = useStore((state) => state.setIsBuilding);
   const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
-  const addJunimoHut = useStructStore((state) => state.addJunimoHut);
-  const removeJunimoHut = useStructStore((state) => state.removeJunimoHut);
+  const addStruct = useStructStore((state) => state.addStruct);
+  const removeStruct = useStructStore((state) => state.removeStruct);
 
   return (
     <div
@@ -55,8 +55,8 @@ const JunimoHut: FC<StructProps> = (props) => {
         setCurrentStruct({
           name: Structs.JunimoHut,
           sprite: JunimoHut,
-          build: addJunimoHut,
-          raze: removeJunimoHut,
+          build: (coordinates: [number, number]) => addStruct(Structs.JunimoHut, coordinates),
+          raze: (coordinates: [number, number]) => removeStruct(Structs.JunimoHut, coordinates),
           aoeFunction: AoEFunction,
           footprintFunction: FootprintFunction,
         });

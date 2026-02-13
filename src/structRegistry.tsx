@@ -26,37 +26,37 @@ export type StructConfig = {
 export const structRegistry: Record<Structs, StructConfig> = {
   [Structs.Scarecrow]: {
     view: Views.Scarecrow,
-    getSet: (state) => state.scarecrows,
+    getSet: (state) => state.structs[Structs.Scarecrow],
     component: Scarecrow,
     aoeFunction: ScarecrowAoEFunction,
   },
   [Structs.Sprinkler1]: {
     view: Views.Sprinkler,
-    getSet: (state) => state.sprinkler1s,
+    getSet: (state) => state.structs[Structs.Sprinkler1],
     component: Sprinkler1,
     aoeFunction: Sprinkler1AoEFunction,
   },
   [Structs.Sprinkler2]: {
     view: Views.Sprinkler,
-    getSet: (state) => state.sprinkler2s,
+    getSet: (state) => state.structs[Structs.Sprinkler2],
     component: Sprinkler2,
     aoeFunction: Sprinkler2AoEFunction,
   },
   [Structs.Sprinkler3]: {
     view: Views.Sprinkler,
-    getSet: (state) => state.sprinkler3s,
+    getSet: (state) => state.structs[Structs.Sprinkler3],
     component: Sprinkler3,
     aoeFunction: Sprinkler3AoEFunction,
   },
   [Structs.Sprinkler4]: {
     view: Views.Sprinkler,
-    getSet: (state) => state.sprinkler4s,
+    getSet: (state) => state.structs[Structs.Sprinkler4],
     component: Sprinkler4,
     aoeFunction: Sprinkler4AoEFunction,
   },
   [Structs.JunimoHut]: {
     view: Views.Junimo,
-    getSet: (state) => state.junimoHuts,
+    getSet: (state) => state.structs[Structs.JunimoHut],
     component: JunimoHut,
     aoeFunction: JunimoHutAoEFunction,
     footprintFunction: JunimoHutFootprintFunction,
