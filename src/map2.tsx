@@ -96,6 +96,8 @@ const drawGrid = (
         structs: Record<Structs, Set<[number, number]>>;
         hoverCell: [number, number] | null;
         currentStructName: Structs | undefined;
+        imageCache: Record<string, HTMLImageElement>;
+        onImageLoad: () => void;
     }
 ) => {
     const rowCount = mapRows.length;
@@ -132,7 +134,7 @@ const drawGrid = (
         }
     }
 
-    // Struct footprint (placed structs) - draw all buildings in all views
+    // Struct footprint (placed structs) - gray background + building image scale-to-fit inside, centered
     const allStructTypes = Object.keys(structRegistry) as Structs[];
     for (const structType of allStructTypes) {
         const config = structRegistry[structType];
@@ -140,9 +142,37 @@ const drawGrid = (
         if (!coords || !config) continue;
         for (const coord of coords) {
             const footprint = getFootprintTiles(coord, rowCount, colCount, config.footprintFunction);
+            if (footprint.length === 0) continue;
+            let minC = footprint[0][0], maxC = footprint[0][0], minR = footprint[0][1], maxR = footprint[0][1];
             for (const [c, r] of footprint) {
-                ctx.fillStyle = FootprintColor;
-                ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
+                minC = Math.min(minC, c);
+                maxC = Math.max(maxC, c);
+                minR = Math.min(minR, r);
+                maxR = Math.max(maxR, r);
+            }
+            const x = minC * cellW;
+            const y = minR * cellH;
+            const w = (maxC - minC + 1) * cellW;
+            const h = (maxR - minR + 1) * cellH;
+            ctx.fillStyle = FootprintColor;
+            ctx.fillRect(x, y, w, h);
+            if (config.imageSrc) {
+                const img = opts.imageCache[config.imageSrc];
+                if (img?.complete && img.naturalWidth > 0) {
+                    const scale = Math.min(w / img.naturalWidth, h / img.naturalHeight);
+                    const drawW = img.naturalWidth * scale;
+                    const drawH = img.naturalHeight * scale;
+                    const drawX = x + (w - drawW) / 2;
+                    const drawY = y + (h - drawH) / 2;
+                    ctx.drawImage(img, 0, 0, img.naturalWidth, img.naturalHeight, drawX, drawY, drawW, drawH);
+                } else {
+                    if (!opts.imageCache[config.imageSrc]) {
+                        const image = new Image();
+                        image.onload = () => opts.onImageLoad();
+                        image.src = config.imageSrc;
+                        opts.imageCache[config.imageSrc] = image;
+                    }
+                }
             }
         }
     }
@@ -204,11 +234,13 @@ const Map2 = () => {
     const colCount = mapRows[0]?.length ?? 0;
     const wrapperRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const imageCacheRef = useRef<Record<string, HTMLImageElement>>({});
 
     const view = useStore((state) => state.view);
     const structs = useStructStore((state) => state.structs);
     const currentStruct = useStructStore((state) => state.currentStruct);
     const [hoverCell, setHoverCell] = useState<[number, number] | null>(null);
+    const [imageLoadCounter, setImageLoadCounter] = useState(0);
 
     useLayoutEffect(() => {
         const wrapper = wrapperRef.current;
@@ -223,6 +255,8 @@ const Map2 = () => {
                     structs,
                     hoverCell,
                     currentStructName: currentStruct?.name,
+                    imageCache: imageCacheRef.current,
+                    onImageLoad: () => setImageLoadCounter((c) => c + 1),
                 });
             }
         };
@@ -241,7 +275,7 @@ const Map2 = () => {
         const observer = new ResizeObserver(resize);
         observer.observe(wrapper);
         return () => observer.disconnect();
-    }, [mapRows, rowCount, colCount, view, structs, hoverCell, currentStruct?.name]);
+    }, [mapRows, rowCount, colCount, view, structs, hoverCell, currentStruct?.name, imageLoadCounter]);
 
     const handleDragOver = useCallback((e: React.DragEvent<HTMLCanvasElement>) => {
         e.preventDefault();
