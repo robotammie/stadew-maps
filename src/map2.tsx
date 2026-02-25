@@ -1,6 +1,6 @@
 import React, { useRef, useLayoutEffect, useMemo, useState, useCallback } from 'react';
 import StandardMap from './maps/Standard.txt';
-import { Dirt, Marsh, Grass, Brush, Water, Farmhouse, FootprintColor, HaloColor, FootprintBuildable, FootprintUnbuildable } from './constants';
+import { Dirt, Marsh, Grass, Brush, Water, Buildings, Paths, FootprintColor, HaloColor, FootprintBuildable, FootprintUnbuildable } from './constants';
 import useStructStore from './structStore';
 import useStore from './store';
 import { structRegistry, getStructsForView } from './structRegistry';
@@ -19,8 +19,9 @@ const cellToColor: Record<string, string> = {
     D: Dirt.color,
     M: Marsh.color,
     G: Grass.color,
-    F: Farmhouse.color,
+    F: Buildings.color,
     W: Water.color,
+    P: Paths.color,
 };
 const defaultColor = Brush.color;
 

@@ -42,9 +42,16 @@ export const Water = {
   color: '#1E90FF',
 }
 
-export const Farmhouse = {
-  name: 'Farmhouse',
+export const Buildings = {
+  name: 'Buildings',
   buildable: false,
   farmable: false,
   color: FootprintColor,
+}
+
+export const Paths = {
+  name: 'Paths',
+  buildable: false,
+  farmable: false,
+  color: '#af6004',
 }
