@@ -1,6 +1,6 @@
 import React, { useRef, useLayoutEffect, useMemo, useState, useCallback } from 'react';
 import StandardMap from './maps/Standard.txt';
-import { Dirt, Marsh, Grass, Brush, Water, Buildings, Paths, FootprintColor, HaloColor, FootprintBuildable, FootprintUnbuildable } from './constants';
+import { Dirt, Marsh, Grass, Brush, Water, Buildings, Paths, FootprintColor, FieldColor, HaloColor, FootprintBuildable, FootprintUnbuildable } from './constants';
 import useStructStore from './structStore';
 import useStore from './store';
 import { structRegistry, getStructsForView } from './structRegistry';
@@ -26,8 +26,10 @@ const cellToColor: Record<string, string> = {
 const defaultColor = Brush.color;
 
 const BUILDABLE_CELLS = new Set(['D', 'M', 'G']);
+const FARMABLE_CELLS = new Set(['D', 'M']);
 const getColor = (cell: string) => cellToColor[cell] ?? defaultColor;
 const isBuildable = (cell: string) => BUILDABLE_CELLS.has(cell);
+const isFarmable = (cell: string) => FARMABLE_CELLS.has(cell);
 
 function getFootprintTiles(
     origin: [number, number],
@@ -115,9 +117,9 @@ const drawGrid = (
         }
     }
 
-    // AOE halos for built structs of the current view
-    const structTypesForView = getStructsForView(opts.view);
-    for (const structType of structTypesForView) {
+    // Field color: farmable tiles under sprinkler AOE (all views, beneath other AOE halos)
+    const sprinklerStructTypes = getStructsForView(Views.Sprinkler);
+    for (const structType of sprinklerStructTypes) {
         const config = structRegistry[structType];
         const coords = opts.structs[structType];
         if (!coords || !config?.aoeFunction) continue;
@@ -125,10 +127,30 @@ const drawGrid = (
             for (let r = 0; r < rowCount; r++) {
                 for (let c = 0; c < colCount; c++) {
                     const tile: [number, number] = [c, r];
-                    if (config.aoeFunction(coord, tile)) {
-                        ctx.fillStyle = HaloColor;
-                        ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
-                    }
+                    if (!config.aoeFunction(coord, tile)) continue;
+                    if (!isFarmable(mapRows[r]?.[c] ?? '')) continue;
+                    ctx.fillStyle = FieldColor;
+                    ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
+                }
+            }
+        }
+    }
+
+    // AOE halos for built structs of the current view (on top of field color)
+    const structTypesForView = getStructsForView(opts.view);
+    for (const structType of structTypesForView) {
+        const config = structRegistry[structType];
+        const coords = opts.structs[structType];
+        if (!coords || !config?.aoeFunction) continue;
+        const isSprinkler = config.view === Views.Sprinkler;
+        for (const coord of coords) {
+            for (let r = 0; r < rowCount; r++) {
+                for (let c = 0; c < colCount; c++) {
+                    const tile: [number, number] = [c, r];
+                    if (!config.aoeFunction(coord, tile)) continue;
+                    if (isSprinkler && isFarmable(mapRows[r]?.[c] ?? '')) continue;
+                    ctx.fillStyle = HaloColor;
+                    ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
                 }
             }
         }
@@ -185,14 +207,15 @@ const drawGrid = (
             const footprintTiles = getFootprintTiles(origin, rowCount, colCount, config.footprintFunction);
             const aoeFunction = config.aoeFunction;
             const occupied = getOccupiedTiles(opts.structs, rowCount, colCount);
+            const dragHaloColor = config.view === Views.Sprinkler ? FieldColor : HaloColor;
 
             for (let r = 0; r < rowCount; r++) {
                 for (let c = 0; c < colCount; c++) {
                     const tile: [number, number] = [c, r];
-                    if (aoeFunction(origin, tile)) {
-                        ctx.fillStyle = HaloColor;
-                        ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
-                    }
+                    if (!aoeFunction(origin, tile)) continue;
+                    if (config.view === Views.Sprinkler && !isFarmable(mapRows[r]?.[c] ?? '')) continue;
+                    ctx.fillStyle = dragHaloColor;
+                    ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
                 }
             }
             for (const [c, r] of footprintTiles) {
