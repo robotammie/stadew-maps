@@ -8,7 +8,7 @@ import { Structs, StructProps, Views } from '../types.d'
 import { styles } from './BaseStruct';
 
 // const SCARECROW_RADIUS = 9;
-const SCARECROW_RADIUS = 3;
+const SCARECROW_RADIUS = 8.95;
 
 // check if given tile is within the aoE of a given scarecrow
 export function AoEFunction(
