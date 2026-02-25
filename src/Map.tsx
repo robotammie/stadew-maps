@@ -1,6 +1,24 @@
 import React, { useRef, useLayoutEffect, useMemo, useState, useCallback } from 'react';
 import StandardMap from './maps/Standard.txt';
-import { Dirt, Marsh, Grass, Brush, Water, Buildings, Paths, FootprintColor, FieldColor, HaloColor, FootprintBuildable, FootprintUnbuildable } from './constants';
+import ForestMap from './maps/Forest.txt';
+import type { MapKey } from './App';
+import {
+    FootprintColor,
+    FieldColor,
+    HaloColor,
+    FootprintBuildable,
+    FootprintUnbuildable,
+} from './constants.d';
+import {
+    Dirt,
+    Marsh,
+    Grass,
+    Brush,
+    Water,
+    Buildings,
+    Paths,
+    Noop,
+} from './terrain.d';
 import useStructStore from './structStore';
 import useStore from './store';
 import { structRegistry, getStructsForView } from './structRegistry';
@@ -23,6 +41,7 @@ const cellToColor: Record<string, string> = {
     F: Buildings.color,
     W: Water.color,
     P: Paths.color,
+    X: Noop.color,
 };
 const defaultColor = Brush.color;
 
@@ -258,8 +277,13 @@ const drawGrid = (
     ctx.stroke();
 };
 
-const Map2 = () => {
-    const map = StandardMap as string;
+const MAP_CONTENT: Record<MapKey, string> = {
+    standard: StandardMap as string,
+    forest: ForestMap as string,
+};
+
+const Map = ({ mapKey }: { mapKey: MapKey }) => {
+    const map = MAP_CONTENT[mapKey];
     const mapRows = useMemo(() => {
         const lines = map.trim().split('\n').filter(Boolean);
         return lines.map((row) => {
@@ -500,4 +524,4 @@ const Map2 = () => {
     );
 }
 
-export default Map2;
+export default Map;
