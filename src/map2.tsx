@@ -45,6 +45,27 @@ function getFootprintTiles(
     return tiles;
 }
 
+function getOccupiedTiles(
+    structs: Record<Structs, Set<[number, number]>>,
+    rowCount: number,
+    colCount: number
+): Set<string> {
+    const occupied = new Set<string>();
+    const allStructTypes = Object.keys(structRegistry) as Structs[];
+    for (const structType of allStructTypes) {
+        const config = structRegistry[structType];
+        const coords = structs[structType];
+        if (!coords || !config) continue;
+        for (const coord of coords) {
+            const footprint = getFootprintTiles(coord, rowCount, colCount, config.footprintFunction);
+            for (const [c, r] of footprint) {
+                occupied.add(`${c},${r}`);
+            }
+        }
+    }
+    return occupied;
+}
+
 function getCellFromEvent(
     canvas: HTMLCanvasElement,
     e: React.MouseEvent | React.DragEvent,
@@ -110,8 +131,9 @@ const drawGrid = (
         }
     }
 
-    // Struct footprint (placed structs) - draw over AOE so they stay visible
-    for (const structType of structTypesForView) {
+    // Struct footprint (placed structs) - draw all buildings in all views
+    const allStructTypes = Object.keys(structRegistry) as Structs[];
+    for (const structType of allStructTypes) {
         const config = structRegistry[structType];
         const coords = opts.structs[structType];
         if (!coords || !config) continue;
@@ -131,6 +153,7 @@ const drawGrid = (
             const origin = opts.hoverCell;
             const footprintTiles = getFootprintTiles(origin, rowCount, colCount, config.footprintFunction);
             const aoeFunction = config.aoeFunction;
+            const occupied = getOccupiedTiles(opts.structs, rowCount, colCount);
 
             for (let r = 0; r < rowCount; r++) {
                 for (let c = 0; c < colCount; c++) {
@@ -143,7 +166,7 @@ const drawGrid = (
             }
             for (const [c, r] of footprintTiles) {
                 const cell = mapRows[r]?.[c];
-                const buildable = cell !== undefined && isBuildable(cell);
+                const buildable = cell !== undefined && isBuildable(cell) && !occupied.has(`${c},${r}`);
                 ctx.fillStyle = buildable ? FootprintBuildable : FootprintUnbuildable;
                 ctx.fillRect(c * cellW, r * cellH, cellW, cellH);
             }
@@ -245,14 +268,15 @@ const Map2 = () => {
         const config = structRegistry[currentStruct.name];
         if (!config) return;
         const footprintTiles = getFootprintTiles(cell, rowCount, colCount, config.footprintFunction);
+        const occupied = getOccupiedTiles(structs, rowCount, colCount);
         const allBuildable = footprintTiles.every(([c, r]) => {
             const ch = mapRows[r]?.[c];
-            return ch !== undefined && isBuildable(ch);
+            return ch !== undefined && isBuildable(ch) && !occupied.has(`${c},${r}`);
         });
         if (allBuildable) {
             currentStruct.build(cell);
         }
-    }, [colCount, rowCount, currentStruct, mapRows]);
+    }, [colCount, rowCount, currentStruct, mapRows, structs]);
 
     return (
         <div ref={wrapperRef} style={containerStyle}>
