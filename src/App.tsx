@@ -1,7 +1,8 @@
 import React from 'react';
 import Box from '@mui/material/Box';
 import './App.css';
-import Map from './Map';
+// import Map from './Map';
+import Map from './map2';
 import StructureMenu from './StructureMenu';
 import ViewSelector from './ViewSelector';
 
