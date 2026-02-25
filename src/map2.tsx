@@ -13,6 +13,7 @@ const canvasStyle = {
 const containerStyle: React.CSSProperties = {
     width: '80%',
     minWidth: '500px',
+    position: 'relative',
 };
 
 const cellToColor: Record<string, string> = {
@@ -51,10 +52,22 @@ function getFootprintTiles(
 function getOccupiedTiles(
     structs: Record<Structs, Set<[number, number]>>,
     rowCount: number,
-    colCount: number
+    colCount: number,
+    excludeOrigin?: { structName: Structs; cell: [number, number] }
 ): Set<string> {
     const occupied = new Set<string>();
     const allStructTypes = Object.keys(structRegistry) as Structs[];
+    let excludeTiles: Set<string> | undefined;
+    if (excludeOrigin) {
+        const config = structRegistry[excludeOrigin.structName];
+        if (config) {
+            excludeTiles = new Set(
+                getFootprintTiles(excludeOrigin.cell, rowCount, colCount, config.footprintFunction).map(
+                    ([c, r]) => `${c},${r}`
+                )
+            );
+        }
+    }
     for (const structType of allStructTypes) {
         const config = structRegistry[structType];
         const coords = structs[structType];
@@ -62,7 +75,8 @@ function getOccupiedTiles(
         for (const coord of coords) {
             const footprint = getFootprintTiles(coord, rowCount, colCount, config.footprintFunction);
             for (const [c, r] of footprint) {
-                occupied.add(`${c},${r}`);
+                const key = `${c},${r}`;
+                if (!excludeTiles?.has(key)) occupied.add(key);
             }
         }
     }
@@ -258,12 +272,35 @@ const Map2 = () => {
     const wrapperRef = useRef<HTMLDivElement>(null);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const imageCacheRef = useRef<Record<string, HTMLImageElement>>({});
+    const transparentDragImageRef = useRef<HTMLDivElement | null>(null);
+    const dropHandledOnCanvasRef = useRef(false);
+    useLayoutEffect(() => {
+        const el = document.createElement('div');
+        el.style.width = '1px';
+        el.style.height = '1px';
+        el.style.opacity = '0';
+        el.style.pointerEvents = 'none';
+        el.style.position = 'absolute';
+        el.style.left = '-9999px';
+        document.body.appendChild(el);
+        transparentDragImageRef.current = el;
+        return () => {
+            document.body.removeChild(el);
+            transparentDragImageRef.current = null;
+        };
+    }, []);
 
     const view = useStore((state) => state.view);
     const structs = useStructStore((state) => state.structs);
     const currentStruct = useStructStore((state) => state.currentStruct);
+    const currentStructMoveOrigin = useStructStore((state) => state.currentStructMoveOrigin);
+    const setCurrentStruct = useStructStore((state) => state.setCurrentStruct);
+    const setCurrentStructForMove = useStructStore((state) => state.setCurrentStructForMove);
+    const addStruct = useStructStore((state) => state.addStruct);
+    const removeStruct = useStructStore((state) => state.removeStruct);
     const [hoverCell, setHoverCell] = useState<[number, number] | null>(null);
     const [imageLoadCounter, setImageLoadCounter] = useState(0);
+    const [canvasSize, setCanvasSize] = useState({ width: 0, height: 0 });
 
     useLayoutEffect(() => {
         const wrapper = wrapperRef.current;
@@ -291,6 +328,7 @@ const Map2 = () => {
             canvas!.height = height;
             canvas!.style.width = `${width}px`;
             canvas!.style.height = `${height}px`;
+            setCanvasSize({ width, height });
             redraw();
         };
 
@@ -320,21 +358,52 @@ const Map2 = () => {
             setHoverCell(null);
             return;
         }
+        dropHandledOnCanvasRef.current = true;
         const cell = getCellFromEvent(canvas, e, colCount, rowCount);
         setHoverCell(null);
-        if (cell === null) return;
+
+        if (currentStructMoveOrigin) {
+            if (cell === null) {
+                currentStruct.raze(currentStructMoveOrigin);
+                return;
+            }
+            if (cell[0] === currentStructMoveOrigin[0] && cell[1] === currentStructMoveOrigin[1]) {
+                return;
+            }
+        } else if (cell === null) {
+            return;
+        }
+
         const config = structRegistry[currentStruct.name];
         if (!config) return;
         const footprintTiles = getFootprintTiles(cell, rowCount, colCount, config.footprintFunction);
-        const occupied = getOccupiedTiles(structs, rowCount, colCount);
+        const excludeOrigin =
+            currentStructMoveOrigin && currentStruct
+                ? { structName: currentStruct.name, cell: currentStructMoveOrigin }
+                : undefined;
+        const occupied = getOccupiedTiles(structs, rowCount, colCount, excludeOrigin);
         const allBuildable = footprintTiles.every(([c, r]) => {
             const ch = mapRows[r]?.[c];
             return ch !== undefined && isBuildable(ch) && !occupied.has(`${c},${r}`);
         });
         if (allBuildable) {
             currentStruct.build(cell);
+        } else if (currentStructMoveOrigin) {
+            currentStruct.raze(currentStructMoveOrigin);
         }
-    }, [colCount, rowCount, currentStruct, mapRows, structs]);
+    }, [colCount, rowCount, currentStruct, currentStructMoveOrigin, mapRows, structs]);
+
+    const cellW = canvasSize.width / colCount || 0;
+    const cellH = canvasSize.height / rowCount || 0;
+
+    const overlayStyle: React.CSSProperties = {
+        position: 'absolute',
+        left: 0,
+        top: 0,
+        width: canvasSize.width,
+        height: canvasSize.height,
+        pointerEvents: 'none',
+    };
 
     return (
         <div ref={wrapperRef} style={containerStyle}>
@@ -348,6 +417,85 @@ const Map2 = () => {
                 onDragLeave={handleDragLeave}
                 onDrop={handleDrop}
             />
+            <div style={overlayStyle}>
+                {(Object.keys(structRegistry) as Structs[]).flatMap((structType) => {
+                    const config = structRegistry[structType];
+                    const coords = structs[structType];
+                    if (!config || !coords) return [];
+                    return Array.from(coords).map((coord) => {
+                        const footprint = getFootprintTiles(
+                            coord,
+                            rowCount,
+                            colCount,
+                            config.footprintFunction
+                        );
+                        if (footprint.length === 0) return null;
+                        let minC = footprint[0][0],
+                            maxC = footprint[0][0],
+                            minR = footprint[0][1],
+                            maxR = footprint[0][1];
+                        for (const [c, r] of footprint) {
+                            minC = Math.min(minC, c);
+                            maxC = Math.max(maxC, c);
+                            minR = Math.min(minR, r);
+                            maxR = Math.max(maxR, r);
+                        }
+                        const left = minC * cellW;
+                        const top = minR * cellH;
+                        const w = (maxC - minC + 1) * cellW;
+                        const h = (maxR - minR + 1) * cellH;
+                        const StructComponent = config.component;
+                        return (
+                            <div
+                                key={`${structType}-${coord[0]}-${coord[1]}`}
+                                draggable
+                                onDragStart={(e) => {
+                                    dropHandledOnCanvasRef.current = false;
+                                    e.dataTransfer.setData('text/plain', structType);
+                                    e.dataTransfer.effectAllowed = 'move';
+                                    setCurrentStructForMove(
+                                        {
+                                            name: structType,
+                                            sprite: StructComponent,
+                                            build: (newCell: [number, number]) => {
+                                                removeStruct(structType, coord);
+                                                addStruct(structType, newCell);
+                                            },
+                                            raze: (c: [number, number]) => removeStruct(structType, c),
+                                            aoeFunction: config.aoeFunction,
+                                            footprintFunction: config.footprintFunction,
+                                        },
+                                        coord
+                                    );
+                                    if (e.dataTransfer && transparentDragImageRef.current) {
+                                        e.dataTransfer.setDragImage(transparentDragImageRef.current, 0, 0);
+                                    }
+                                }}
+                                onDragEnd={() => {
+                                    const state = useStructStore.getState();
+                                    if (
+                                        !dropHandledOnCanvasRef.current &&
+                                        state.currentStructMoveOrigin &&
+                                        state.currentStruct
+                                    ) {
+                                        state.currentStruct.raze(state.currentStructMoveOrigin);
+                                    }
+                                    setCurrentStruct(undefined);
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    left,
+                                    top,
+                                    width: w,
+                                    height: h,
+                                    pointerEvents: 'auto',
+                                    cursor: 'grab',
+                                }}
+                            />
+                        );
+                    });
+                })}
+            </div>
         </div>
     );
 }

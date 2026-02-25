@@ -5,6 +5,9 @@ import { Building, Structs } from './types.d'
 export interface MapState {
   currentStruct: Building | undefined
   setCurrentStruct: (element: Building | undefined) => void
+  /** When dragging from the map, the cell we're moving from (so drop validation excludes it). */
+  currentStructMoveOrigin: [number, number] | undefined
+  setCurrentStructForMove: (element: Building, originCell: [number, number]) => void
   structs: Record<Structs, Set<[number, number]>>
   addStruct: (struct: Structs, coordinates: [number, number]) => void
   removeStruct: (struct: Structs, coordinates: [number, number]) => void
@@ -24,7 +27,10 @@ const removeFromSet = (set: Set<[number, number]>, coordinates: [number, number]
 
 const useStore = create<MapState>((set) => ({
   currentStruct: undefined,
-  setCurrentStruct: (struct) => set({ currentStruct: struct }),
+  setCurrentStruct: (struct) => set({ currentStruct: struct, currentStructMoveOrigin: undefined }),
+  currentStructMoveOrigin: undefined,
+  setCurrentStructForMove: (element, originCell) =>
+    set({ currentStruct: element, currentStructMoveOrigin: originCell }),
   structs: {
     [Structs.Scarecrow]: new Set(),
     [Structs.Sprinkler1]: new Set(),
