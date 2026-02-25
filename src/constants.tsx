@@ -1,8 +1,9 @@
 // COLORS
 export const FieldColor = '#8c5703'
-export const FieldColorHalo = '#8c7703'
-export const DirtColorHalo = '#cfa004'
 export const FootprintColor = '#6E6E6E'
+export const HaloColor ='rgba(207, 160, 4, 0.6)';
+export const FootprintBuildable = 'rgba(0, 180, 0, 0.5)';
+export const FootprintUnbuildable = 'rgba(200, 0, 0, 0.6)';
 
 
 // Terrain Types
